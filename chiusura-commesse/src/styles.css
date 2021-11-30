@@ -1,0 +1,117 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import "~bootstrap/dist/css/bootstrap.css";
+html,
+body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+.navbar-header {
+    float: none;
+    text-align: center;
+}
+.content{
+    margin:30px 0px;
+}
+
+/* top bar */
+
+.navbar {
+    text-transform: uppercase;
+    background-color: #f2f2f3;
+    border: none;
+    -webkit-box-shadow: 0px 2px 12px -7px rgba(0, 0, 0, 0.75);
+    -moz-box-shadow: 0px 2px 12px -7px rgba(0, 0, 0, 0.75);
+    box-shadow: 0px 2px 12px -7px rgba(0, 0, 0, 0.75);
+}
+
+.navbar a {
+    color: #fff;
+    font-weight: 300;
+    text-decoration: none
+}
+
+.navbar-default .navbar-brand {
+    color: #fff;
+    font-weight: bold;
+    margin: 0;
+    line-height: 50px;
+    float: none;
+    margin-left: auto;
+    margin-right: auto;
+    width: 60px;
+    float: none;
+}
+
+.icon {
+    margin-bottom: 8px;
+    margin: 0;
+    padding: 15px 15px;
+    float: right;
+}
+
+.back {
+    float: left;
+    background-color: #feaf8d;
+}
+
+.search {
+    background: #fb7b74;
+    float: left;
+}
+
+.tw {
+    background: #3fc6f3
+}
+
+.fb {
+    background: #0d9be5
+}
+
+
+/* toggle button */
+
+.navbar-toggle {
+    border: none;
+    color: #fff;
+    margin: 0;
+    padding: 18px 15px;
+    border-radius: 0px;
+    float: left;
+}
+
+.navbar-default .navbar-toggle,
+.navbar-default .navbar-toggle:hover,
+.navbar-default .navbar-toggle:focus {
+    background-color: #fc575e;
+}
+
+.navbar-default .navbar-toggle .icon-bar {
+    background-color: #fff;
+}
+
+
+/* Position where the element is fixed */
+
+.affix {
+    top: 50px;
+    width: 200px;
+}
+
+#affix {
+    width: 200px;
+}
+
+.nav li a {
+    border-bottom: 1px solid #ddd;
+    color: #7b7a7e;
+}
+
+.nav li a i {
+    margin-right: 20px;
+}

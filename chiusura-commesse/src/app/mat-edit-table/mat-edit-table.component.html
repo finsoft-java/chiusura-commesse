@@ -1,0 +1,74 @@
+<div class="button_style_cassettiere">
+  <button mat-raised-button color="secondary" style="float: right;margin: 0px 0px 0px 0px;" [disabled]="!buttonsEnabled" (click)="exportCsv()">{{labels.exportCsv}}</button>
+  <button mat-raised-button color="secondary" style="float: right;margin: 0px 10px 0px 0px;" [disabled]="!buttonsEnabled" (click)="exportXlsx()">{{labels.exportXlsx}}</button>
+  <button *ngIf="editable" mat-raised-button color="primary" style="float: right;margin: 0px 10px 0px 0px;" [disabled]="!buttonsEnabled" (click)="beginCreate()">{{labels.add}}</button>
+  <button mat-raised-button color="primary" style="float: right;margin: 0px 10px 0px 0px;" [disabled]="!buttonsEnabled" (click)="refresh()">{{labels.refresh}}</button>
+</div>
+
+<ng-content></ng-content>
+
+<alert></alert>
+<table mat-table [dataSource]="dataSource" class="mat-elevation-z8" style="width:100%" id="edittable">
+    <ng-container matColumnDef="{{col.data}}" *ngFor="let col of columns">
+      <th mat-header-cell *matHeaderCellDef>
+        {{col.title}}
+      </th>
+      <td mat-cell *matCellDef="let row; let rowNum = index;" [style.width]="col.width" [ngStyle]="getFormattazioneCondizionale(row)">
+       
+        <div *ngIf="rowNum !== editRowNumber">
+            <div *ngIf="col.data === ACTIONS_INDEX; spanHeader" >
+              <button mat-raised-button color="primary" style="margin-right:15px;" [disabled]="!buttonsEnabled" (click)="beginEdit(rowNum)">{{labels.edit}}</button>
+              <button mat-raised-button color="warn" [disabled]="!buttonsEnabled" (click)="deleteRow(rowNum)">{{labels.delete}}</button>
+            </div>
+            <span #spanHeader>
+              {{ renderCell(col, row, rowNum, -1) }}
+            </span>
+          </div>
+          <div *ngIf="rowNum === editRowNumber">
+            <div *ngIf="col.data === ACTIONS_INDEX; else dataField">
+                <button mat-raised-button color="primary" style="margin-right:15px;" [disabled]="!buttonsEnabled" (click)="saveRow(rowNum)">{{labels.save}}</button>
+                <button mat-raised-button color="secondary" [disabled]="!buttonsEnabled" (click)="undoChange(rowNum);">{{labels.undo}}</button>
+            </div>
+            <ng-template #dataField>
+              <mat-form-field style="width: 90%; display: block; margin: 0px auto; margin-top:10px;">
+                <mat-label>{{col.title}}</mat-label>
+
+                <input *ngIf="col.type !== 'select' && col.type !== 'combo'" matInput type="{{col.type}}" [(ngModel)]="row[col.data]" [disabled]="col.disabled != null && (col.disabled && !creating)" (change)="onChangeCell($event, col)"/>
+                
+                <mat-select *ngIf="col.type === 'select'" matInput [(ngModel)]="row[col.data]" [disabled]="col.disabled != null && (col.disabled && !creating)" (change)="onChangeCell($event, col)">
+                  <mat-option *ngFor="let opt of col.options" [value]="opt.value">{{ opt.label }}</mat-option>
+                </mat-select>
+                
+                <mat-select *ngIf="col.type === 'combo'" [(ngModel)]="row[col.data]">
+                  <mat-option>
+                    <ngx-mat-select-search (input)="onSearchChange(row, col, searchValue[col.data])" [(ngModel)]="searchValue[col.data]" placeholderLabel="" noEntriesFoundLabel="No data found"></ngx-mat-select-search>
+                  </mat-option>
+                  <mat-option *ngFor="let opt of col.options" [value]="opt.value">{{opt.label}}</mat-option>
+                </mat-select>
+
+              </mat-form-field>
+            </ng-template>
+          </div>
+      </td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+</table>
+
+<mat-paginator
+  *ngIf="pagination==='client'"
+  [pageSizeOptions]="pageSizeOptions"
+  showFirstLastButtons
+  >
+</mat-paginator>
+
+<mat-paginator
+  *ngIf="pagination==='server'"
+  (page)="handlePageEvent($event)"
+  [length]="paginatorLength"
+  [pageSize]="pageSize"
+  [pageSizeOptions]="pageSizeOptions"
+  [pageIndex]="pageIndex"
+  showFirstLastButtons
+  >
+</mat-paginator>

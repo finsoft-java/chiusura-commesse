@@ -1,0 +1,46 @@
+body {
+    height: 100%;
+}
+
+.example-sidenav-content {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.example-sidenav {
+    padding: 20px;
+}
+
+.mat-drawer {
+    position: fixed;
+    top: 0;
+    left: 0px;
+    height: 100%;
+    width: 300px;
+    outline: 0;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.mat-drawer-container {
+    height: 100%
+}
+
+.mat-menu-item {
+    background: transparent;
+    color: rgba(0, 0, 0, 0.87);
+    float: left;
+    width: 100%;
+    text-align: left;
+    border-bottom: 1px solid;
+    padding: 10px;
+    border-top: 0px;
+    border-left: 0px;
+    border-right: 0px;
+}
+
+.navbar>.container {
+    justify-content: flex-end;
+}

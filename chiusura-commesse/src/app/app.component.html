@@ -1,0 +1,40 @@
+<mat-drawer-container class="example-container" autosize>
+
+  <div
+    class="navbar navbar-default navbar-fixed-top"
+    role="navigation"
+    *ngIf="!menuDisabled"
+  >
+    <div class="container">
+      <div class="navbar-header">
+        <nav style="padding: 15px 0">
+          <div>
+            <button
+              mat-button
+              (click)="routerFrontend.navigate(['cruscotto'])"
+            >
+              <span>Cruscotto</span>
+            </button>
+            <button
+              mat-button
+              (click)="logout()"
+            >
+              <span>Logout</span>
+            </button>
+          </div>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <div class="content" role="main">
+    <div class="container">
+      <alert></alert>
+      <router-outlet></router-outlet>
+    </div>
+<!--footer style="background-color: black;color:#fff;padding:30px;">
+    <div class="container">
+        Finsoft 2021
+    </div>
+</footer-->
+  </div>
+</mat-drawer-container>

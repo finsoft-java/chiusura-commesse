@@ -1,0 +1,15 @@
+﻿<div *ngIf="message" style="position:fixed; top:15px;left:50%;-webkit-transform: translateX(-50%);-moz-transform: translateX(-50%);-o-transform: translateX(-50%);-ms-transform: translateX(-50%);transform: translateX(-50%);z-index:10000">
+    <div [ngClass]="{ 'alert': message, 'alert-success': message.type === 'success', 'alert-danger': message.type === 'error' }" role="alert" [innerHTML]="message.text">
+    </div>
+    <button type="button" class="close" style="position: fixed;
+    top: -2px;
+    right: -4px;
+    -webkit-transform: translateX(-50%);
+    -moz-transform: translateX(-50%);
+    -o-transform: translateX(-50%);
+    -ms-transform: translateX(-50%);
+    transform: translateX(-50%);
+    z-index: 10000;" (click)="messageReturnNull()" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
