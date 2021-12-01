@@ -9,9 +9,9 @@ class LdapManager {
      */
     function login($username, $pwd) {
 		if (AD_FILTER)
-			return $this->_common_get_user(AD_SERVER, $username . '@' . AD_DOMAIN, $pwd, $username, AD_BASE_DN, [AD_FILTER => 'validatore', '' => 'codificatore']);
+			return $this->_common_get_user(AD_SERVER, $username . '@' . AD_DOMAIN, $pwd, $username, AD_BASE_DN, [AD_FILTER => 'readwrite', '' => 'readonly']);
 		else
-			return $this->_common_get_user(AD_SERVER, $username . '@' . AD_DOMAIN, $pwd, $username, AD_BASE_DN, ['' => 'validatore']);
+			return $this->_common_get_user(AD_SERVER, $username . '@' . AD_DOMAIN, $pwd, $username, AD_BASE_DN, ['' => 'readonly']);
     }
 
     /**
