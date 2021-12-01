@@ -10,12 +10,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_logged_user_JWT();
 
+$codCommessa = isset($_GET['codCommessa']) ? $panthera->escape_string($_GET['codCommessa']) : null;
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
+    if ($codCommessa == null) {
         [$list, $count] = $panthera->getVistaCruscotto();
           
         header('Content-Type: application/json');
         echo json_encode(['data' => $list, 'count' => $count]);
+
+    } else {
+        $object = $panthera->getVistaCruscottoById($codCommessa);
+          
+        header('Content-Type: application/json');
+        echo json_encode(['value' => $object]);
+    }
     
 } else {
     //==========================================================

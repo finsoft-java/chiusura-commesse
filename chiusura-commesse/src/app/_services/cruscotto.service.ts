@@ -13,6 +13,10 @@ export class CruscottoService implements HttpCrudService<VistaCruscotto> {
     return this.http.get<ListBean<VistaCruscotto>>(environment.wsUrl + 'VistaCruscotto.php');
   }
 
+  getById(codCommessa: string): Observable<ValueBean<VistaCruscotto>> {
+    return this.http.get<ValueBean<VistaCruscotto>>(environment.wsUrl + `VistaCruscotto.php?codCommessa=${codCommessa}`);
+  }
+
   create(obj: VistaCruscotto): Observable<ValueBean<VistaCruscotto>> {
     throw new Error('Method not implemented.');
   }

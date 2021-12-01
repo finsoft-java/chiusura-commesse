@@ -185,7 +185,7 @@ class PantheraManager {
         } else {
             $sql0 = "SELECT COUNT(*) AS cnt ";
             $sql1 = "SELECT ID_ARTICOLO,DESCRIZIONE,DISEGNO ";
-            $sql = "FROM THIP.ARTICOLI WHERE ID_AZIENDA='001' ";
+            $sql = "FROM THIP.BOH WHERE ID_AZIENDA='001' ";
             $sql .= "ORDER BY 1,2,3 ";
 
             $count = $this->select_single_value($sql0 . $sql);
@@ -193,6 +193,19 @@ class PantheraManager {
         }
         
         return [$objects, $count];
+    }
+
+    function getVistaCruscottoById($codCommessa) {
+        if ($this->mock) {
+            $object = [ 'COD_COMMESSA' => 'AAAAA', 'DESCRIZIONE' => 'Piantare patate', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D1', 'TOT_FATTURATO' => 50000, 'SALDO_CONTO_TRANSITORIO' => 50000 , 'SALDO_CONTO_RICAVI' => 0.0 ];
+        } else {
+            $sql = "SELECT ID_ARTICOLO,DESCRIZIONE,DISEGNO 
+                FROM THIP.BOH WHERE ID_AZIENDA='001' AND COD_COMMESSA='$codCommessa' ";
+
+            $object = $this->select_single($sql);
+        }
+        
+        return $object;
     }
 
     function getVistaAnalisiCommessa($codCommessa) {
