@@ -12,15 +12,12 @@ require_logged_user_JWT();
 
 $codCommessa = isset($_GET['codCommessa']) ? $panthera->escape_string($_GET['codCommessa']) : null;
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if ($codCommessa == null) {
         print_error(400, "Missing codCommessa");
     }
-    [$list, $count] = $panthera->getVistaAnalisiCommessa($codCommessa);
-        
-    header('Content-Type: application/json');
-    echo json_encode(['data' => $list, 'count' => $count]);
+    [$list, $count] = $panthera->chiusuraContabileCommessa($codCommessa);
     
 } else {
     //==========================================================
