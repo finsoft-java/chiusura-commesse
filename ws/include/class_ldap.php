@@ -8,10 +8,10 @@ class LdapManager {
      * Login
      */
     function login($username, $pwd) {
-		if (AD_FILTER)
-			return $this->_common_get_user(AD_SERVER, $username . '@' . AD_DOMAIN, $pwd, $username, AD_BASE_DN, [AD_FILTER => 'readwrite', '' => 'readonly']);
-		else
-			return $this->_common_get_user(AD_SERVER, $username . '@' . AD_DOMAIN, $pwd, $username, AD_BASE_DN, ['' => 'readonly']);
+        return $this->_common_get_user(AD_SERVER, $username . '@' . AD_DOMAIN, $pwd, $username, AD_BASE_DN, [
+            AD_FILTER_READWRITE => 'readwrite',
+            AD_FILTER_READONLY => 'readonly'
+        ]);
     }
 
     /**

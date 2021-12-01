@@ -3,6 +3,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { Router } from '@angular/router';
 import { VistaCruscotto } from '../_models';
 import { AlertService } from '../_services/alert.service';
+import { ChiusuraService } from '../_services/chiusura.service';
 import { CruscottoService } from '../_services/cruscotto.service';
 
 @Component({
@@ -16,10 +17,17 @@ export class CruscottoComponent implements OnInit {
   dataSource = new MatTableDataSource<VistaCruscotto>();
   utentePrivilegiato = true;
 
-  constructor(private router: Router, private svc: CruscottoService, private alertService: AlertService) {
+  constructor(private router: Router,
+    private svc: CruscottoService,
+    private chiusuraSvc: ChiusuraService,
+    private alertService: AlertService) {
   }
 
   ngOnInit(): void {
+    this.getAll();
+  }
+
+  getAll(): void {
     this.svc.getAll({}).subscribe(response => {
       response.data.forEach(x => {
         if (x.TOT_FATTURATO !== (x.SALDO_CONTO_RICAVI + x.SALDO_CONTO_TRANSITORIO)) {
@@ -44,7 +52,13 @@ export class CruscottoComponent implements OnInit {
   }
 
   chiusura(row: VistaCruscotto) {
-    // TODO
+    alert("L'utente deve dare una conferma, poi chiamiamo il webservice");
+    this.chiusuraSvc.chiusuraContabile(row.COD_COMMESSA).subscribe(response => {
+      this.getAll();
+    },
+    error => {
+      this.alertService.error(error);
+    });
   }
 
   giroconto(row: VistaCruscotto) {
