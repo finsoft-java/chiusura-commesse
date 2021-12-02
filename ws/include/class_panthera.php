@@ -210,9 +210,9 @@ class PantheraManager {
 
     function getVistaAnalisiCommessa($codCommessa) {
         if ($this->mock) {
-            $objects = [ [ 'COD_COMMESSA' => 'AAAAA', 'DESCRIZIONE' => 'Piantare patate', 'COD_CLIENTE' => '1234', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'COD_ARTICOLO' => 'F101010', 'COD_ARTICOLO_RIF' => 'F202020', 'CENTRO_COSTO' => 'A51', 'DARE' => 10000, 'AVERE' => 20000 ],
-                      [ 'COD_COMMESSA' => 'BBBB', 'DESCRIZIONE' => 'Annaffiare fagiolini', 'COD_CLIENTE' => '4321', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'COD_ARTICOLO' => 'F101010', 'COD_ARTICOLO_RIF' => 'F202020', 'CENTRO_COSTO' => 'A51', 'DARE' => 10000, 'AVERE' => 20000  ],
-                      [ 'COD_COMMESSA' => 'ZZZZZZ', 'DESCRIZIONE' => 'Pelare zucchine', 'COD_CLIENTE' => '1234', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'COD_ARTICOLO' => 'F101010', 'COD_ARTICOLO_RIF' => 'F202020', 'CENTRO_COSTO' => 'A51', 'DARE' => 10000, 'AVERE' => 20000  ]
+            $objects = [ [ 'COD_COMMESSA' => 'AAAAA', 'DESCRIZIONE' => 'Piantare patate', 'COD_CLIENTE' => '1234', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'COD_ARTICOLO' => 'F101010', 'COD_ARTICOLO_RIF' => 'F202020', 'CENTRO_COSTO' => 'A51', 'DARE' => 0, 'AVERE' => 20000 ],
+                      [ 'COD_COMMESSA' => 'BBBB', 'DESCRIZIONE' => 'Annaffiare fagiolini', 'COD_CLIENTE' => '4321', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'COD_ARTICOLO' => 'F101010', 'COD_ARTICOLO_RIF' => 'F202020', 'CENTRO_COSTO' => 'A51', 'DARE' => 10000, 'AVERE' => 0  ],
+                      [ 'COD_COMMESSA' => 'ZZZZZZ', 'DESCRIZIONE' => 'Pelare zucchine', 'COD_CLIENTE' => '1234', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'COD_ARTICOLO' => 'F101010', 'COD_ARTICOLO_RIF' => 'F202020', 'CENTRO_COSTO' => 'A51', 'DARE' => 10000, 'AVERE' => 0  ]
                      ];
             $count = 1000;
         } else {
