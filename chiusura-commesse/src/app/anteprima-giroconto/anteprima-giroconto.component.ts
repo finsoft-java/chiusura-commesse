@@ -3,7 +3,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RigaConto } from '../_models';
 import { AlertService } from '../_services/alert.service';
-import { ChiusuraService } from '../_services/chiusura.service';
+import { AzioniService } from '../_services/azioni.service';
 import { CruscottoService } from '../_services/cruscotto.service';
 
 @Component({
@@ -19,7 +19,7 @@ export class AnteprimaGirocontoComponent implements OnInit {
   constructor(private route: ActivatedRoute,
     private router: Router,
     private svc: CruscottoService,
-    private chiusuraSvc: ChiusuraService,
+    private azioniSvc: AzioniService,
     private alertService: AlertService) { }
 
   ngOnInit(): void {
@@ -33,12 +33,12 @@ export class AnteprimaGirocontoComponent implements OnInit {
     this.svc.getById(this.codCommessa).subscribe(response => {
       const data: RigaConto[] = [];
       data.push({
-        conto: 'XXX_CONTO_RICAVI',
+        conto: response.value.CONTO_RICAVI,
         verso: 'AVERE',
         importo: response.value.SALDO_CONTO_TRANSITORIO
       });
       data.push({
-        conto: 'XXX_CONTO_TRANSITORIO',
+        conto: response.value.CONTO_TRANSITORIO,
         verso: 'DARE',
         importo: response.value.SALDO_CONTO_TRANSITORIO
       });
@@ -48,12 +48,13 @@ export class AnteprimaGirocontoComponent implements OnInit {
   }
 
   giroconto() {
-    alert("L'utente deve dare una conferma, poi chiamiamo il webservice");
-    this.chiusuraSvc.preparaGiroconto(this.codCommessa).subscribe(response => {
-      this.router.navigate(['cruscotto', this.codCommessa]);
-    },
-    error => {
-      this.alertService.error(error);
-    });
+    if (confirm('Verrà emesso il giroconto. Procedere?')) {
+      this.azioniSvc.preparaGiroconto(this.codCommessa).subscribe(response => {
+        this.router.navigate(['cruscotto', this.codCommessa]);
+      },
+      error => {
+        this.alertService.error(error);
+      });
+    }
   }
 }

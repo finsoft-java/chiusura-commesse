@@ -1,7 +1,10 @@
-<h5>Cruscotto commesse chiuse</h5>
+<h5>Cruscotto commesse installate</h5>
 
 <div>
-In questa schermata vengono presentate tutte le commesse chiuse operativamente ma non contabilmente.
+In questa schermata vengono presentate tutte le commesse in stato workflow "Installata presso Cliente (SAT)".
+</div>
+<div>
+Proporrei di nascondere le colonne descrizione/cliente/divisione
 </div>
 
 <table mat-table [dataSource]="dataSource" class="contentTable mat-elevation-z8">
@@ -26,32 +29,40 @@ In questa schermata vengono presentate tutte le commesse chiuse operativamente m
         <th mat-header-cell *matHeaderCellDef> Tot. Fatturato </th>
         <td mat-cell *matCellDef="let element"> {{element.TOT_FATTURATO}} </td>
     </ng-container>
+    <ng-container matColumnDef="contoTransitorio">
+        <th mat-header-cell *matHeaderCellDef> Conto transitorio </th>
+        <td mat-cell *matCellDef="let element"> {{element.CONTO_TRANSITORIO}} </td>
+    </ng-container>
     <ng-container matColumnDef="saldoTr">
         <th mat-header-cell *matHeaderCellDef> Saldo conto transitorio </th>
         <td mat-cell *matCellDef="let element"> {{element.SALDO_CONTO_TRANSITORIO}} </td>
     </ng-container>
-    <ng-container matColumnDef="saldoRic">
+    <ng-container matColumnDef="contoRicavi">
+        <th mat-header-cell *matHeaderCellDef> Conto ricavi </th>
+        <td mat-cell *matCellDef="let element"> {{element.CONTO_RICAVI}} </td>
+    </ng-container>
+    <ng-container matColumnDef="saldoRicavi">
         <th mat-header-cell *matHeaderCellDef> Saldo conto ricavi </th>
         <td mat-cell *matCellDef="let element"> {{element.SALDO_CONTO_RICAVI}} </td>
     </ng-container>
     <ng-container matColumnDef="warning">
-        <th mat-header-cell *matHeaderCellDef> Warning </th>
-        <td mat-cell *matCellDef="let element"> {{element.TIPO == 4 ? 'Squadratura' : element.TIPO == 3 ? 'Giroconto parziale' : ''}} </td>
+        <th mat-header-cell *matHeaderCellDef> Esito validazione </th>
+        <td mat-cell *matCellDef="let element"> {{ warnings[element.TIPO-1] }} </td>
     </ng-container>
 
     <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef> Azioni </th>
         <td mat-cell *matCellDef="let element">
-            <button mat-raised-button color="primary" (click)="analisi(element)">Analisi</button>
+            <button mat-raised-button color="primary" (click)="analisi(element)">Analisi</button><br/>
             <button *ngIf="utentePrivilegiato" mat-raised-button color="warn"
-                (click)="chiusura(element)"
+                (click)="avanzamentoWorkflow(element)"
                 [disabled]="element.TIPO!==1"
-                [title]="(element.TIPO==4) ? 'Impossibile procedere con squadratura': element.TIPO==1 ? 'Procedi alla chiusura contabile' : 'Prima occorre eseguire il giroconto'"
-                >Chiusura</button>
+                [title]="(element.TIPO>=4) ? 'Prima occorre risolvere le anomalie in Panthera': element.TIPO==1 ? '' : 'Prima occorre eseguire il giroconto'"
+                >Avanzamento WF</button><br/>
             <button *ngIf="utentePrivilegiato" mat-raised-button color="warn"
                 (click)="giroconto(element)"
                 [disabled]="element.TIPO!==2 && element.TIPO!==3"
-                [title]="element.TIPO==4 ? 'Impossibile procedere con squadratura': element.TIPO==1 ? 'Giroconto non necessario' : 'Procedi ad eseguire il giroconto'"
+                [title]="element.TIPO>=4 ? 'Prima occorre risolvere le anomalie in Panthera': element.TIPO==1 ? 'Giroconto non necessario' : ''"
                 >Giroconto</button>
         </td>
     </ng-container>

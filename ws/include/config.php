@@ -1,10 +1,6 @@
 <?php 
 
-/* DATABASE CASSETTIERE */
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'codifica');
+/* L'applicazione non prevede db locale */
 
 define('JWT_SECRET_KEY', 'OSAISECRET2021');
 
@@ -15,8 +11,6 @@ define('AD_BASE_DN', "dc=OSAI,dc=LOC");
 define('AD_FILTER_READONLY', '(objectclass=person)');
 define('AD_FILTER_READWRITE', '(objectclass=person)');
 // define('AD_FILTER', '(&(|(objectclass=person))(|(|(memberof=CN=OSAI-IT Users,OU=OU Osai Groups,DC=osai,DC=loc)(primaryGroupID=1202))(|(memberof=CN=OSAI-DE Users,OU=OU Osai Groups,DC=osai,DC=loc)(primaryGroupID=2625))(|(memberof=CN=OSAI-CN Users,OU=OU Osai Groups,DC=osai,DC=loc)(primaryGroupID=3233))(|(memberof=CN=OSAI-US Users,OU=OU Osai Groups,DC=osai,DC=loc)(primaryGroupID=4426))))');
-define('AD_USERNAME', 'surveyosai@OSAI.LOC');
-define('AD_PASSWORD', 's0fu3Y2o19!');
 
 /* DATABASE PANTHERA */
 define('MOCK_PANTHERA', 'true');
@@ -24,4 +18,18 @@ define('DB_PTH_HOST', 'tcp:myserver.database.windows.net,1433');
 define('DB_PTH_USER', 'my_user');
 define('DB_PTH_PASS', 'my_pwd');
 define('DB_PTH_NAME', 'PANTH01');
+
+/*produzione
+define('MOCK_PANTHERA', 'false');
+define('DB_PTH_HOST', 'tcp:svr-pth,1433');
+define('DB_PTH_USER', 'finsoft');
+define('DB_PTH_PASS', '**************');
+define('DB_PTH_NAME', 'PANTH01');
+*/
+
+$matrice_conti = [
+    'CT1' => 'CR1',
+    'CT2' => 'CR2'
+];
+
 ?>

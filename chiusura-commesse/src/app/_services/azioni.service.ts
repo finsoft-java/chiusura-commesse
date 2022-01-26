@@ -1,16 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { ListBean, ValueBean, VistaCruscotto } from '../_models';
-import { HttpCrudService } from './HttpCrudService';
 
 @Injectable({ providedIn: 'root' })
-export class ChiusuraService {
+export class AzioniService {
   constructor(private http: HttpClient) { }
 
-  chiusuraContabile(codCommessa: string) {
-    return this.http.post<void>(environment.wsUrl + `ChiusuraContabile.php?codCommessa=${codCommessa}`, '');
+  avanzamentoWorkflow(codCommessa: string) {
+    return this.http.post<void>(environment.wsUrl + `AvanzamentoWorkflow.php?codCommessa=${codCommessa}`, '');
   }
 
   preparaGiroconto(codCommessa: string) {

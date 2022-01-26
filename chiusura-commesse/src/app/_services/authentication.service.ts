@@ -4,14 +4,14 @@ import { HttpClient } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { User } from '../_models/index';
-import { environment } from './../../environments/environment';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthenticationService {
     public currentUserSubject: User;
     nameChange: Subject<string> = new Subject<string>();
 
-    constructor (private http: HttpClient, private router: Router) {
+    constructor(private http: HttpClient, private router: Router) {
       this.currentUserSubject = new User();
     }
 
@@ -39,12 +39,11 @@ export class AuthenticationService {
 
     public isAuthenticated(): boolean {
       const token = localStorage.getItem('currentUser');
-      if (token == null || token == undefined){
+      if (token == null || token === undefined) {
         return false;
-      } else {
-        this.currentUserSubject.username = token;
-        return true;
       }
+      this.currentUserSubject.username = token;
+      return true;
     }
 
     logout() {

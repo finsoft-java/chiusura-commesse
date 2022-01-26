@@ -3,7 +3,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { Router } from '@angular/router';
 import { VistaCruscotto } from '../_models';
 import { AlertService } from '../_services/alert.service';
-import { ChiusuraService } from '../_services/chiusura.service';
+import { AzioniService } from '../_services/azioni.service';
 import { CruscottoService } from '../_services/cruscotto.service';
 
 @Component({
@@ -13,32 +13,35 @@ import { CruscottoService } from '../_services/cruscotto.service';
 })
 export class CruscottoComponent implements OnInit {
   displayedColumns: string[] = ['commessa', 'descrizione', 'cliente', 'divisione', 'fatturato',
-    'saldoTr', 'saldoRic', 'warning', 'actions'];
+    'contoTransitorio', 'saldoTr', 'contoRicavi', 'saldoRicavi', 'warning', 'actions'];
   dataSource = new MatTableDataSource<VistaCruscotto>();
   utentePrivilegiato = true;
+  warnings = [
+    '',
+    '',
+    'Giroconto parziale',
+    'Squadratura',
+    'Verificare conto'
+  ];
+  REFRESH_DELAY = 60; // refresh every REFRESH_DELAY seconds
 
   constructor(private router: Router,
     private svc: CruscottoService,
-    private chiusuraSvc: ChiusuraService,
+    private azioniSvc: AzioniService,
     private alertService: AlertService) {
   }
 
   ngOnInit(): void {
     this.getAll();
+    setInterval(() => {
+      this.getAll();
+    }, this.REFRESH_DELAY * 1000);
   }
 
   getAll(): void {
     this.svc.getAll({}).subscribe(response => {
       response.data.forEach(x => {
-        if (x.TOT_FATTURATO !== (x.SALDO_CONTO_RICAVI + x.SALDO_CONTO_TRANSITORIO)) {
-          x.TIPO = 4; // c'è qualche problema, l'utente deve correggere in Panthera
-        } else if (x.SALDO_CONTO_TRANSITORIO === 0.0) {
-          x.TIPO = 1; // non serve giroconto, si può chiudere
-        } else if (x.SALDO_CONTO_RICAVI === 0.0) {
-          x.TIPO = 2; // serve giroconto, poi diventa di tipo 1
-        } else {
-          x.TIPO = 3; // serve giroconto e anche una verifica da parte dell'utente, poi diventa di tipo 1
-        }
+        this.validazione(x);
       });
       this.dataSource = new MatTableDataSource<VistaCruscotto>(response.data);
     },
@@ -47,18 +50,35 @@ export class CruscottoComponent implements OnInit {
     });
   }
 
+  validazione(x: VistaCruscotto) {
+    console.log(x);
+    if (x.CONTO_TRANSITORIO === null || x.CONTO_TRANSITORIO === '' || x.CONTO_RICAVI === undefined
+                                                      || x.CONTO_RICAVI === null || x.CONTO_RICAVI === '') {
+      x.TIPO = 5; // c'è qualche problema, l'utente deve correggere in Panthera
+    } else if (x.TOT_FATTURATO !== (x.SALDO_CONTO_RICAVI + x.SALDO_CONTO_TRANSITORIO)) {
+      x.TIPO = 4; // c'è qualche problema, l'utente deve correggere in Panthera
+    } else if (x.SALDO_CONTO_TRANSITORIO === 0.0) {
+      x.TIPO = 1; // non serve giroconto, si può chiudere
+    } else if (x.SALDO_CONTO_RICAVI === 0.0) {
+      x.TIPO = 2; // serve giroconto, poi diventa di tipo 1
+    } else {
+      x.TIPO = 3; // serve giroconto e anche una verifica da parte dell'utente, poi diventa di tipo 1
+    }
+  }
+
   analisi(row: VistaCruscotto) {
     this.router.navigate(['analisi-commessa', row.COD_COMMESSA]);
   }
 
-  chiusura(row: VistaCruscotto) {
-    alert("L'utente deve dare una conferma, poi chiamiamo il webservice");
-    this.chiusuraSvc.chiusuraContabile(row.COD_COMMESSA).subscribe(response => {
-      this.getAll();
-    },
-    error => {
-      this.alertService.error(error);
-    });
+  avanzamentoWorkflow(row: VistaCruscotto) {
+    if (confirm('Il workflow verrà avanzato in stato "A Ricavo". Procedere?')) {
+      this.azioniSvc.avanzamentoWorkflow(row.COD_COMMESSA).subscribe(response => {
+        this.getAll();
+      },
+      error => {
+        this.alertService.error(error);
+      });
+    }
   }
 
   giroconto(row: VistaCruscotto) {

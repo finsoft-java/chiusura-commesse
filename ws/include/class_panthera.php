@@ -176,20 +176,34 @@ class PantheraManager {
 
     function getVistaCruscotto() {
         if ($this->mock) {
-            $objects = [ [ 'COD_COMMESSA' => 'AAAAA', 'DESCRIZIONE' => 'Piantare patate', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D1', 'TOT_FATTURATO' => 50000, 'SALDO_CONTO_TRANSITORIO' => 50000 , 'SALDO_CONTO_RICAVI' => 0.0 ],
-                      [ 'COD_COMMESSA' => 'BBBB', 'DESCRIZIONE' => 'Annaffiare fagiolini', 'COD_CLIENTE' => '4321','COD_DIVISIONE' => 'D1', 'TOT_FATTURATO' => 100000, 'SALDO_CONTO_TRANSITORIO' => 10000 , 'SALDO_CONTO_RICAVI' => 90000 ],
-                      [ 'COD_COMMESSA' => 'ZZZZZZ', 'DESCRIZIONE' => 'Pelare zucchine', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'TOT_FATTURATO' => 50000, 'SALDO_CONTO_TRANSITORIO' => 20000 , 'SALDO_CONTO_RICAVI' => 0.0 ],
-                      [ 'COD_COMMESSA' => 'TTTTTT', 'DESCRIZIONE' => 'Potare ortensie', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'TOT_FATTURATO' => 10000, 'SALDO_CONTO_TRANSITORIO' => 0.0 , 'SALDO_CONTO_RICAVI' => 10000.0 ]
+            $objects = [ [ 'COD_COMMESSA' => 'AAAAA', 'DESCRIZIONE' => 'Piantare patate', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D1', 'TOT_FATTURATO' => 50000, 'SALDO_CONTO_TRANSITORIO' => 50000 , 'SALDO_CONTO_RICAVI' => 0.0, 'CONTO_TRANSITORIO' => 'CT1' ],
+                      [ 'COD_COMMESSA' => 'BBBB', 'DESCRIZIONE' => 'Annaffiare fagiolini', 'COD_CLIENTE' => '4321','COD_DIVISIONE' => 'D1', 'TOT_FATTURATO' => 100000, 'SALDO_CONTO_TRANSITORIO' => 10000 , 'SALDO_CONTO_RICAVI' => 90000, 'CONTO_TRANSITORIO' => 'CT1' ],
+                      [ 'COD_COMMESSA' => 'ZZZZZZ', 'DESCRIZIONE' => 'Pelare zucchine', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'TOT_FATTURATO' => 50000, 'SALDO_CONTO_TRANSITORIO' => 20000 , 'SALDO_CONTO_RICAVI' => 0.0, 'CONTO_TRANSITORIO' => 'CT1' ],
+                      [ 'COD_COMMESSA' => 'TTTTTT', 'DESCRIZIONE' => 'Potare ortensie', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'TOT_FATTURATO' => 10000, 'SALDO_CONTO_TRANSITORIO' => 0.0 , 'SALDO_CONTO_RICAVI' => 10000.0, 'CONTO_TRANSITORIO' => 'CT2' ],
+                      [ 'COD_COMMESSA' => 'TTTTTT', 'DESCRIZIONE' => 'Potare ortensie', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'TOT_FATTURATO' => 10000, 'SALDO_CONTO_TRANSITORIO' => 0.0 , 'SALDO_CONTO_RICAVI' => 10000.0, 'CONTO_TRANSITORIO' => 'CT1/CT2' ]
                      ];
             $count = 1000;
         } else {
-            $sql0 = "SELECT COUNT(*) AS cnt ";
-            $sql1 = "SELECT ID_ARTICOLO,DESCRIZIONE,DISEGNO ";
-            $sql = "FROM THIP.BOH WHERE ID_AZIENDA='001' ";
-            $sql .= "ORDER BY 1,2,3 ";
+            $sql0 = "SELECT COUNT(*) AS cnt
+                    FROM THIP.BOH
+                    WHERE ID_AZIENDA='001'";
+            $sql1 = "SELECT ID_ARTICOLO,DESCRIZIONE,DISEGNO
+                    FROM THIP.BOH
+                    WHERE ID_AZIENDA='001'
+                    ORDER BY 1,2,3 ";
 
-            $count = $this->select_single_value($sql0 . $sql);
-            $objects = $this->select_list($sql1 . $sql);
+            $count = $this->select_single_value($sql0);
+            $objects = $this->select_list($sql1);
+        }
+
+        global $matrice_conti;
+        if (count($objects) > 0) {
+            foreach($objects as $id => $obj) {
+                $contoTransitorio = $obj['CONTO_TRANSITORIO'];
+                if (isset($matrice_conti[$contoTransitorio])) {
+                    $objects[$id]['CONTO_RICAVI'] = $matrice_conti[$contoTransitorio];
+                }
+            }
         }
         
         return [$objects, $count];
@@ -197,12 +211,18 @@ class PantheraManager {
 
     function getVistaCruscottoById($codCommessa) {
         if ($this->mock) {
-            $object = [ 'COD_COMMESSA' => 'AAAAA', 'DESCRIZIONE' => 'Piantare patate', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D1', 'TOT_FATTURATO' => 50000, 'SALDO_CONTO_TRANSITORIO' => 50000 , 'SALDO_CONTO_RICAVI' => 0.0 ];
+            $object = [ 'COD_COMMESSA' => 'AAAAA', 'DESCRIZIONE' => 'Piantare patate', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D1', 'TOT_FATTURATO' => 50000, 'CONTO_TRANSITORIO' => 'CT1', 'SALDO_CONTO_TRANSITORIO' => 50000 , 'SALDO_CONTO_RICAVI' => 0.0 ];
         } else {
             $sql = "SELECT ID_ARTICOLO,DESCRIZIONE,DISEGNO 
                 FROM THIP.BOH WHERE ID_AZIENDA='001' AND COD_COMMESSA='$codCommessa' ";
 
             $object = $this->select_single($sql);
+        }
+
+        global $matrice_conti;
+        $contoTransitorio = $object['CONTO_TRANSITORIO'];
+        if (isset($matrice_conti[$contoTransitorio])) {
+            $object['CONTO_RICAVI'] = $matrice_conti[$contoTransitorio];
         }
         
         return $object;
@@ -210,25 +230,26 @@ class PantheraManager {
 
     function getVistaAnalisiCommessa($codCommessa) {
         if ($this->mock) {
-            $objects = [ [ 'COD_COMMESSA' => 'AAAAA', 'DESCRIZIONE' => 'Piantare patate', 'COD_CLIENTE' => '1234', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'COD_ARTICOLO' => 'F101010', 'COD_ARTICOLO_RIF' => 'F202020', 'CENTRO_COSTO' => 'A51', 'DARE' => 0, 'AVERE' => 20000 ],
-                      [ 'COD_COMMESSA' => 'BBBB', 'DESCRIZIONE' => 'Annaffiare fagiolini', 'COD_CLIENTE' => '4321', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'COD_ARTICOLO' => 'F101010', 'COD_ARTICOLO_RIF' => 'F202020', 'CENTRO_COSTO' => 'A51', 'DARE' => 10000, 'AVERE' => 0  ],
-                      [ 'COD_COMMESSA' => 'ZZZZZZ', 'DESCRIZIONE' => 'Pelare zucchine', 'COD_CLIENTE' => '1234', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'COD_ARTICOLO' => 'F101010', 'COD_ARTICOLO_RIF' => 'F202020', 'CENTRO_COSTO' => 'A51', 'DARE' => 10000, 'AVERE' => 0  ]
+            $objects = [ [ 'COD_COMMESSA' => 'AAAAA', 'DESCRIZIONE' => 'Piantare patate', 'COD_CLIENTE' => '1234', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'COD_ARTICOLO' => 'F101010', 'COD_ARTICOLO_RIF' => 'F202020', 'CENTRO_COSTO' => 'A51', 'DARE' => 0, 'AVERE' => 20000, 'CONTO' => 'CT1' ],
+                      [ 'COD_COMMESSA' => 'BBBB', 'DESCRIZIONE' => 'Annaffiare fagiolini', 'COD_CLIENTE' => '4321', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'COD_ARTICOLO' => 'F101010', 'COD_ARTICOLO_RIF' => 'F202020', 'CENTRO_COSTO' => 'A51', 'DARE' => 10000, 'AVERE' => 0, 'CONTO' => 'CR1'  ]
                      ];
             $count = 1000;
         } else {
-            $sql0 = "SELECT COUNT(*) AS cnt ";
-            $sql1 = "SELECT ID_ARTICOLO,DESCRIZIONE,DISEGNO ";
-            $sql = "FROM THIP.ARTICOLI WHERE ID_AZIENDA='001' AND COD_COMMESSA='$codCommessa' ";
-            $sql .= "ORDER BY 1,2,3 ";
-
-            $count = $this->select_single_value($sql0 . $sql);
-            $objects = $this->select_list($sql1 . $sql);
+            $sql0 = "SELECT COUNT(*) AS cnt 
+                FROM THIP.ARTICOLI WHERE ID_AZIENDA='001' AND COD_COMMESSA='$codCommessa'
+            ";
+            $sql1 = "SELECT ID_ARTICOLO,DESCRIZIONE,DISEGNO
+                FROM THIP.ARTICOLI WHERE ID_AZIENDA='001' AND COD_COMMESSA='$codCommessa'
+                ORDER BY 1,2,3
+            ";
+            $count = $this->select_single_value($sql0);
+            $objects = $this->select_list($sql1);
         }
         
         return [$objects, $count];
     }
     
-    function chiusuraContabileCommessa($codCommessa) {
+    function avanzamentoWorkflow($codCommessa) {
         if (!$this->mock) {
             $sql = "UPDATE THIP.COMMESSE SET STATO='BOH' WHERE COD_COMMESSA='$codCommessa' ";
             executeUpdate($sql);
