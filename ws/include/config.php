@@ -32,4 +32,8 @@ $matrice_conti = [
     'CT2' => 'CR2'
 ];
 
+/* stati del workflow da gestire */
+define('STATO_WF_START', '123');
+define('STATO_WF_END', '456');
+
 ?>

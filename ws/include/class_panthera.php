@@ -184,13 +184,17 @@ class PantheraManager {
                      ];
             $count = 1000;
         } else {
+            $statoIniziale = STATO_WF_START;
             $sql0 = "SELECT COUNT(*) AS cnt
                     FROM THIP.BOH
-                    WHERE ID_AZIENDA='001'";
-            $sql1 = "SELECT ID_ARTICOLO,DESCRIZIONE,DISEGNO
-                    FROM THIP.BOH
-                    WHERE ID_AZIENDA='001'
-                    ORDER BY 1,2,3 ";
+                    WHERE ID_AZIENDA='001' AND STATO_WF=$statoIniziale";
+            $sql1 = "SELECT COD_COMMESSA,DESCRIZIONE,COD_CLIENTE,COD_DIVISIONE,TOT_FATTURATO,
+                            -1 as SALDO_CONTO_TRANSITORIO,
+                            -1 as SALDO_CONTO_RICAVI,
+                            COD_CONTO as CONTO_TRANSITORIO
+                    FROM THIP.COMMESSE
+                    WHERE ID_AZIENDA='001' AND STATO_WF=$statoIniziale
+                    ORDER BY COD_COMMESSA ";
 
             $count = $this->select_single_value($sql0);
             $objects = $this->select_list($sql1);
@@ -213,8 +217,12 @@ class PantheraManager {
         if ($this->mock) {
             $object = [ 'COD_COMMESSA' => 'AAAAA', 'DESCRIZIONE' => 'Piantare patate', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D1', 'TOT_FATTURATO' => 50000, 'CONTO_TRANSITORIO' => 'CT1', 'SALDO_CONTO_TRANSITORIO' => 50000 , 'SALDO_CONTO_RICAVI' => 0.0 ];
         } else {
-            $sql = "SELECT ID_ARTICOLO,DESCRIZIONE,DISEGNO 
-                FROM THIP.BOH WHERE ID_AZIENDA='001' AND COD_COMMESSA='$codCommessa' ";
+            $sql = "SELECT COD_COMMESSA,DESCRIZIONE,COD_CLIENTE,COD_DIVISIONE,TOT_FATTURATO,
+                        -1 as SALDO_CONTO_TRANSITORIO,
+                        -1 as SALDO_CONTO_RICAVI,
+                        COD_CONTO as CONTO_TRANSITORIO
+                    FROM THIP.COMMESSE
+                    WHERE ID_AZIENDA='001' AND COD_COMMESSA='$codCommessa' ";
 
             $object = $this->select_single($sql);
         }
@@ -230,17 +238,23 @@ class PantheraManager {
 
     function getVistaAnalisiCommessa($codCommessa) {
         if ($this->mock) {
-            $objects = [ [ 'COD_COMMESSA' => 'AAAAA', 'DESCRIZIONE' => 'Piantare patate', 'COD_CLIENTE' => '1234', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'COD_ARTICOLO' => 'F101010', 'COD_ARTICOLO_RIF' => 'F202020', 'CENTRO_COSTO' => 'A51', 'DARE' => 0, 'AVERE' => 20000, 'CONTO' => 'CT1' ],
-                      [ 'COD_COMMESSA' => 'BBBB', 'DESCRIZIONE' => 'Annaffiare fagiolini', 'COD_CLIENTE' => '4321', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'COD_ARTICOLO' => 'F101010', 'COD_ARTICOLO_RIF' => 'F202020', 'CENTRO_COSTO' => 'A51', 'DARE' => 10000, 'AVERE' => 0, 'CONTO' => 'CR1'  ]
+            $objects = [ [ 'COD_COMMESSA' => 'AAAAA', 'DESCRIZIONE' => 'Piantare patate', 'COD_CLIENTE' => '1234', 'COD_DIVISIONE' => 'D2', 'COD_ARTICOLO' => 'F101010', 'COD_ARTICOLO_RIF' => 'F202020', 'CENTRO_COSTO' => 'A51', 'DARE' => 0, 'AVERE' => 20000, 'CONTO' => 'CT1' ],
+                      [ 'COD_COMMESSA' => 'BBBB', 'DESCRIZIONE' => 'Annaffiare fagiolini', 'COD_CLIENTE' => '4321', 'COD_DIVISIONE' => 'D2', 'COD_ARTICOLO' => 'F101010', 'COD_ARTICOLO_RIF' => 'F202020', 'CENTRO_COSTO' => 'A51', 'DARE' => 10000, 'AVERE' => 0, 'CONTO' => 'CR1'  ]
                      ];
             $count = 1000;
         } else {
             $sql0 = "SELECT COUNT(*) AS cnt 
                 FROM THIP.ARTICOLI WHERE ID_AZIENDA='001' AND COD_COMMESSA='$codCommessa'
             ";
-            $sql1 = "SELECT ID_ARTICOLO,DESCRIZIONE,DISEGNO
-                FROM THIP.ARTICOLI WHERE ID_AZIENDA='001' AND COD_COMMESSA='$codCommessa'
-                ORDER BY 1,2,3
+            $sql1 = "SELECT COD_COMMESSA,DESCRIZIONE,COD_CLIENTE,COD_DIVISIONE,
+                        COD_ARTICOLO,COD_ARTICOLO_RIF,
+                        CENTRO_COSTO,
+                        -1 as DARE,
+                        -1 as AVERE,
+                        COD_CONTO as CONTO
+                    FROM THIP.COMMESSE
+                    WHERE ID_AZIENDA='001' AND COD_COMMESSA='$codCommessa'
+                    ORDER BY 1,2,3
             ";
             $count = $this->select_single_value($sql0);
             $objects = $this->select_list($sql1);
@@ -251,13 +265,14 @@ class PantheraManager {
     
     function avanzamentoWorkflow($codCommessa) {
         if (!$this->mock) {
-            $sql = "UPDATE THIP.COMMESSE SET STATO='BOH' WHERE COD_COMMESSA='$codCommessa' ";
+            $statoFinale = STATO_WF_END;
+            $sql = "UPDATE THIP.COMMESSE SET STATO_WF=$statoFinale WHERE COD_COMMESSA='$codCommessa' ";
             executeUpdate($sql);
         }
     }
 
     function preparaGiroconto($codCommessa) {
-        // TODO
+        print_error(500, 'Funzione non implementata');
     }
     
 }
