@@ -57,4 +57,8 @@ export class AnteprimaGirocontoComponent implements OnInit {
       });
     }
   }
+
+  back() {
+    this.router.navigate(['cruscotto', this.codCommessa]);
+  }
 }

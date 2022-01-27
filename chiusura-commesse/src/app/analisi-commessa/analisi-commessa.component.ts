@@ -34,4 +34,8 @@ export class AnalisiCommessaComponent implements OnInit {
       });
     });
   }
+
+  back() {
+    this.router.navigate(['cruscotto', this.codCommessa]);
+  }
 }
