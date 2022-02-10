@@ -1,7 +1,8 @@
 import { RigaConto } from './RigaConto';
 
 export interface RigaContoAnalitica extends RigaConto {
-  articolo: string;
-  articoloRif: string;
-  centroCosto: string;
+  COD_ARTICOLO: string;
+  COD_ARTICOLO_RIF: string;
+  CENTRO_COSTO: string;
+  COD_DIVISIONE: string;
 }

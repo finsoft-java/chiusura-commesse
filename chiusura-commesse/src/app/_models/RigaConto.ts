@@ -1,7 +1,6 @@
 export interface RigaConto {
-  conto: string;
-  importo: number;
-  verso: 'DARE'|'AVERE';
-  cliente?: string;
-  fornitore?: string;
+  CONTO: string;
+  IMPORTO: number;
+  VERSO: 'DARE'|'AVERE';
+  COD_CLIENTE?: string;
 }

@@ -12,7 +12,7 @@ import { CruscottoService } from '../_services/cruscotto.service';
   styleUrls: ['./cruscotto.component.css']
 })
 export class CruscottoComponent implements OnInit {
-  displayedColumns: string[] = ['commessa', 'descrizione', 'cliente', 'divisione', 'fatturato',
+  displayedColumns: string[] = ['commessa', 'divisione', 'cliente', 'fatturato',
     'contoTransitorio', 'saldoTr', 'contoRicavi', 'saldoRicavi', 'warning', 'actions'];
   dataSource = new MatTableDataSource<VistaCruscotto>();
   utentePrivilegiato = true;

@@ -28,8 +28,10 @@ define('DB_PTH_NAME', 'PANTH01');
 */
 
 $matrice_conti = [
-    'CT1' => 'CR1',
-    'CT2' => 'CR2'
+	// conto transitorio => conto ricavi
+    '606002' => '901001',
+    '606004' => '901002',
+	'606005' => '901003'
 ];
 
 /* stati del workflow da gestire */

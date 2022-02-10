@@ -175,47 +175,108 @@ class PantheraManager {
     }
 
     function getVistaCruscotto() {
-        if ($this->mock) {
-            $objects = [ [ 'COD_COMMESSA' => 'AAAAA', 'DESCRIZIONE' => 'Piantare patate', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D1', 'TOT_FATTURATO' => 50000, 'SALDO_CONTO_TRANSITORIO' => 50000 , 'SALDO_CONTO_RICAVI' => 0.0, 'CONTO_TRANSITORIO' => 'CT1' ],
-                      [ 'COD_COMMESSA' => 'BBBB', 'DESCRIZIONE' => 'Annaffiare fagiolini', 'COD_CLIENTE' => '4321','COD_DIVISIONE' => 'D1', 'TOT_FATTURATO' => 100000, 'SALDO_CONTO_TRANSITORIO' => 10000 , 'SALDO_CONTO_RICAVI' => 90000, 'CONTO_TRANSITORIO' => 'CT1' ],
-                      [ 'COD_COMMESSA' => 'ZZZZZZ', 'DESCRIZIONE' => 'Pelare zucchine', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'TOT_FATTURATO' => 50000, 'SALDO_CONTO_TRANSITORIO' => 20000 , 'SALDO_CONTO_RICAVI' => 0.0, 'CONTO_TRANSITORIO' => 'CT1' ],
-                      [ 'COD_COMMESSA' => 'TTTTTT', 'DESCRIZIONE' => 'Potare ortensie', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'TOT_FATTURATO' => 10000, 'SALDO_CONTO_TRANSITORIO' => 0.0 , 'SALDO_CONTO_RICAVI' => 10000.0, 'CONTO_TRANSITORIO' => 'CT2' ],
-                      [ 'COD_COMMESSA' => 'TTTTTT', 'DESCRIZIONE' => 'Potare ortensie', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D2', 'TOT_FATTURATO' => 10000, 'SALDO_CONTO_TRANSITORIO' => 0.0 , 'SALDO_CONTO_RICAVI' => 10000.0, 'CONTO_TRANSITORIO' => 'CT1/CT2' ]
-                     ];
-            $count = 1000;
-        } else {
-            $statoIniziale = STATO_WF_START;
-            $sql0 = "SELECT COUNT(*) AS cnt
-                    FROM THIP.BOH
-                    WHERE ID_AZIENDA='001' AND STATO_WF=$statoIniziale";
-            $sql1 = "SELECT COD_COMMESSA,DESCRIZIONE,COD_CLIENTE,COD_DIVISIONE,TOT_FATTURATO,
-                            -1 as SALDO_CONTO_TRANSITORIO,
-                            -1 as SALDO_CONTO_RICAVI,
-                            COD_CONTO as CONTO_TRANSITORIO
-                    FROM THIP.COMMESSE
-                    WHERE ID_AZIENDA='001' AND STATO_WF=$statoIniziale
-                    ORDER BY COD_COMMESSA ";
-
-            $count = $this->select_single_value($sql0);
-            $objects = $this->select_list($sql1);
-        }
-
         global $matrice_conti;
-        if (count($objects) > 0) {
+        if ($this->mock) {
+            $objects = [ [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Implementazione su Linea a Banchi', 'COD_CLIENTE' => '006416','CLI_RA_SOC'=>'BREMBO SPA','COD_DIVISIONE' => 'AUT', 'TOT_FATTURATO' => 50000, 'SALDO_CONTO_TRANSITORIO' => 50000 , 'SALDO_CONTO_RICAVI' => 0.0, 'CONTO_TRANSITORIO' => '606004' ],
+                      [ 'COD_COMMESSA' => 'C36369', 'DES_COMMESSA' => 'SC per NRM', 'COD_CLIENTE' => '008027','CLI_RA_SOC'=>'MB ELETTRONICA S.R.L.','COD_DIVISIONE' => 'ELE', 'TOT_FATTURATO' => 100000, 'SALDO_CONTO_TRANSITORIO' => 10000 , 'SALDO_CONTO_RICAVI' => 90000, 'CONTO_TRANSITORIO' => '606002' ],
+                      [ 'COD_COMMESSA' => 'C36640', 'DES_COMMESSA' => 'SC per ATPS - Auto Test & Pretest S', 'COD_CLIENTE' => '003933','CLI_RA_SOC'=>'STMicroelectronics Finance II NV ','COD_DIVISIONE' => 'SEM', 'TOT_FATTURATO' => 50000, 'SALDO_CONTO_TRANSITORIO' => 20000 , 'SALDO_CONTO_RICAVI' => 0.0, 'CONTO_TRANSITORIO' => '606004' ],
+                      [ 'COD_COMMESSA' => 'C36723', 'DES_COMMESSA' => 'SC per NME+NME', 'COD_CLIENTE' => '001859','CLI_RA_SOC'=>'BITRON POLAND SP. Z.O.O.','COD_DIVISIONE' => 'ELE', 'TOT_FATTURATO' => 10000, 'SALDO_CONTO_TRANSITORIO' => 0.0 , 'SALDO_CONTO_RICAVI' => 10000.0, 'CONTO_TRANSITORIO' => '606004/606004' ],
+                      [ 'COD_COMMESSA' => 'C36910', 'DES_COMMESSA' => 'SC per NME', 'COD_CLIENTE' => '001477','CLI_RA_SOC'=>'Westport Fuel Systems Italia S.r.l.','COD_DIVISIONE' => 'ELE', 'TOT_FATTURATO' => 10000, 'SALDO_CONTO_TRANSITORIO' => 0.0 , 'SALDO_CONTO_RICAVI' => 10000.0, 'CONTO_TRANSITORIO' => '606004' ]
+                     ];
+                     
             foreach($objects as $id => $obj) {
-                $contoTransitorio = $obj['CONTO_TRANSITORIO'];
+                $contoTransitorio = $obj['COD_CONTO'];
                 if (isset($matrice_conti[$contoTransitorio])) {
                     $objects[$id]['CONTO_RICAVI'] = $matrice_conti[$contoTransitorio];
                 }
             }
+        } else {
+            $statoIniziale = STATO_WF_START;
+            //$sql0 = "SELECT COUNT(*) AS cnt
+            //        FROM THIP.BOH
+            //        WHERE ID_AZIENDA='001' AND STATO_WF=$statoIniziale";
+            $sql1 = "SELECT
+                        S.GPV0CD as COD_CONTO,
+                        S.GPD0CD as COD_COMMESSA,
+                        CD.DESCRIZIONE as DES_COMMESSA,
+                        S.T36CD as COD_DIVISIONE,
+                        CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END as COD_CLIENTE,
+                        CLI.RAGIONE_SOCIALE as CLI_RA_SOC,
+                        (GSL0AUCA-GSL0DUCA) as SALDO,
+                        S.GPC0CD as CENTRO_COSTO
+                    FROM [FINANCE].[GSL0PT] S
+                    JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
+                    JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
+                    LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
+                    LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
+                    WHERE GT01CD = 'BASE'
+                        and T01CD = '001'
+                        and GT02CD = 'CONS'
+                        and GSL0TPSL = 1
+                        and GS02CD = '*****'
+                        and GPV0CD not like 'ZZ%'
+                        and DATEPART(yy, GAT0CD) = 2022
+                        and S.GPD0CD = '$codCommessa'
+                        -- and WF_NODE_ID='$statoIniziale'
+                    GROUP BY
+                        S.GPV0CD,S.GPD0CD,S.T36CD,S.GPC0CD,
+                        CD.DESCRIZIONE,
+                        CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END,
+                        CLI.RAGIONE_SOCIALE
+                    ORDER BY COD_COMMESSA ";
+            $objects = $this->select_list($sql1);
+
+            // ora ho più righe per ogni commessa, 1 riga per ogni conto
+            // invece ne voglio una sola
+
+            if (count($objects) > 0) {
+                $conti_transitori = array_keys($matrice_conti);
+                $conti_ricavi = array_values($matrice_conti);
+
+                $groups = array_group_by($objects, 'COD_COMMESSA');
+                $result = [];
+                foreach($groups as $codCommessa => $conti) {
+                    $contoTransitorio = [];
+                    $saldoTransitorio = 0.0;
+                    $contoRicavi = '';
+                    $saldoRicavi = 0.0;
+                    foreach($conti as $row) {
+                        if (in_array($row['COD_CONTO'], $conti_transitori)) {
+                            $contoTransitorio[] = $row['COD_CONTO'];
+                            $saldoTransitorio += $row['SALDO'];
+                        } else if (in_array($row['COD_CONTO'], $conti_ricavi)) {
+                            $contoRicavi[] = $row['COD_CONTO'];
+                            $saldoRicavi += $row['SALDO'];
+                        }
+                    }
+                    // il conto transitorio dovrebbe essere unico, e pure il conto ricavi, e
+                    // inoltre i due conti dovrebbero essere collegato dalla matrice_conti
+                    if (count($contoTransitorio) > 0) {
+                        foreach($contoTransitorio as $c)
+                        $contoRicaviPrevisto = $matrice_conti[$contoTransitorio[0]];
+                        if (!in_array($contoRicaviPrevisto, $contoRicavi)) {
+                            $contoRicavi[] = $contoRicaviPrevisto;
+                        }
+                    }
+
+                    $firstRow = $conti[0];
+                    unset($firstRow['COD_CONTO']);
+                    $firstRow['CONTO_TRANSITORIO'] = implode(';', $contoTransitorio);
+                    $firstRow['SALDO_CONTO_TRANSITORIO'] = $saldoTransitorio;
+                    $firstRow['CONTO_RICAVI'] = implode(';', $contoRicavi);
+                    $firstRow['SALDO_CONTO_RICAVI'] = $saldoRicavi;
+                    $result[] = $firstRow;
+                }
+
+                $objects = $results;
+            }
         }
-        
-        return [$objects, $count];
+        return [$objects, count($objects)];
     }
 
-    function getVistaCruscottoById($codCommessa) {
+  /*  function getVistaCruscottoById($codCommessa) {
         if ($this->mock) {
-            $object = [ 'COD_COMMESSA' => 'AAAAA', 'DESCRIZIONE' => 'Piantare patate', 'COD_CLIENTE' => '1234','COD_DIVISIONE' => 'D1', 'TOT_FATTURATO' => 50000, 'CONTO_TRANSITORIO' => 'CT1', 'SALDO_CONTO_TRANSITORIO' => 50000 , 'SALDO_CONTO_RICAVI' => 0.0 ];
+            $object = [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Implementazione su Linea a Banchi', 'COD_CLIENTE' => '006416','CLI_RA_SOC'=>'BREMBO SPA','COD_DIVISIONE' => 'AUT', 'TOT_FATTURATO' => 50000, 'SALDO_CONTO_TRANSITORIO' => 50000 , 'SALDO_CONTO_RICAVI' => 0.0, 'CONTO_TRANSITORIO' => '606004' ];
         } else {
             $sql = "SELECT COD_COMMESSA,DESCRIZIONE,COD_CLIENTE,COD_DIVISIONE,TOT_FATTURATO,
                         -1 as SALDO_CONTO_TRANSITORIO,
@@ -234,33 +295,64 @@ class PantheraManager {
         }
         
         return $object;
-    }
+    }*/
 
     function getVistaAnalisiCommessa($codCommessa) {
+        global $matrice_conti;
         if ($this->mock) {
-            $objects = [ [ 'COD_COMMESSA' => 'AAAAA', 'DESCRIZIONE' => 'Piantare patate', 'COD_CLIENTE' => '1234', 'COD_DIVISIONE' => 'D2', 'COD_ARTICOLO' => 'F101010', 'COD_ARTICOLO_RIF' => 'F202020', 'CENTRO_COSTO' => 'A51', 'DARE' => 0, 'AVERE' => 20000, 'CONTO' => 'CT1' ],
-                      [ 'COD_COMMESSA' => 'BBBB', 'DESCRIZIONE' => 'Annaffiare fagiolini', 'COD_CLIENTE' => '4321', 'COD_DIVISIONE' => 'D2', 'COD_ARTICOLO' => 'F101010', 'COD_ARTICOLO_RIF' => 'F202020', 'CENTRO_COSTO' => 'A51', 'DARE' => 10000, 'AVERE' => 0, 'CONTO' => 'CR1'  ]
+            $objects = [ [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Fixture for seed attachment (n° 2)', 'COD_CLIENTE' => '006409              ', 'CLI_RA_SOC' => 'STMicroelectronics Silicon Carbide', 'COD_DIVISIONE' => 'SMP', 'COD_ARTICOLO' => 'F101010', 'DES_ARTICOLO' => '.', 'COD_ARTICOLO_RIF' => '', 'CENTRO_COSTO' => 'A51', 'DARE' => 0, 'AVERE' => 20000, 'CONTO' => '606004              ', 'ESERCIZIO' => '2022', 'TIPO_CONTO' => 'TRANSITORIO' ],
+                      [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Fixture for seed attachment (n° 2)', 'COD_CLIENTE' => '006409              ', 'CLI_RA_SOC' => 'STMicroelectronics Silicon Carbide', 'COD_DIVISIONE' => 'SMP', 'COD_ARTICOLO' => 'F101010', 'DES_ARTICOLO' => '.', 'COD_ARTICOLO_RIF' => '', 'CENTRO_COSTO' => 'A51', 'DARE' => 10000, 'AVERE' => 0, 'CONTO' => '901002              ', 'ESERCIZIO' => '2022', 'TIPO_CONTO' => 'RICAVI'  ]
                      ];
-            $count = 1000;
         } else {
-            $sql0 = "SELECT COUNT(*) AS cnt 
-                FROM THIP.ARTICOLI WHERE ID_AZIENDA='001' AND COD_COMMESSA='$codCommessa'
-            ";
-            $sql1 = "SELECT COD_COMMESSA,DESCRIZIONE,COD_CLIENTE,COD_DIVISIONE,
-                        COD_ARTICOLO,COD_ARTICOLO_RIF,
-                        CENTRO_COSTO,
-                        -1 as DARE,
-                        -1 as AVERE,
-                        COD_CONTO as CONTO
-                    FROM THIP.COMMESSE
-                    WHERE ID_AZIENDA='001' AND COD_COMMESSA='$codCommessa'
-                    ORDER BY 1,2,3
-            ";
-            $count = $this->select_single_value($sql0);
+            $sql1 = "SELECT
+                        S.GPV0CD as COD_CONTO,
+                        S.GPD0CD as COD_COMMESSA,
+                        CD.DESCRIZIONE as DES_COMMESSA,
+                        S.T36CD as COD_DIVISIONE,
+                        CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END as COD_CLIENTE,
+                        CLI.RAGIONE_SOCIALE as CLI_RA_SOC,				
+                        S.GPS2CD as COD_ARTICOLO,
+                        AR.DESCR_ESTESA as DES_ARTICOLO,
+                        GPS3CD as COD_ARTICOLO_RIF,
+                        GSL0DUCA as DARE,
+                        GSL0AUCA as AVERE,
+                        (GSL0AUCA-GSL0DUCA) as SALDO,
+                        DATEPART(yy, S.GAT0CD) as ESERCIZIO,
+                        GPC0CD as CENTRO_COSTO
+                    FROM [FINANCE].[GSL0PT] S
+                    JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
+                    JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
+                    LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
+                    LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
+                    WHERE GT01CD = 'BASE'
+                        and T01CD = '001'
+                        and GT02CD = 'CONS'
+                        and GSL0TPSL = 1
+                        and GS02CD = '*****'
+                        --and DATEPART(yy, GAT0CD) = 2022
+                        and GPV0CD not like 'ZZ%'
+                        --and GPC0CD = 'CR001'
+                        --and not (GSL0DUCA = 0 and GSL0AUCA = 0)
+                        and S.GPD0CD = '$codCommessa'
+                    ORDER BY COD_CONTO";
             $objects = $this->select_list($sql1);
+
+            if (count($objects) > 0) {
+                $conti_transitori = array_keys($matrice_conti);
+                $conti_ricavi = array_values($matrice_conti);
+                foreach($objects as $id => $row) {
+                    if (in_array($row['COD_CONTO'], $conti_transitori)) {
+                        $objects[$id]['TIPO_CONTO'] = 'TRANSITORIO';
+                    } else (in_array($row['COD_CONTO'], $conti_ricavi)) {
+                        $objects[$id]['TIPO_CONTO'] = 'RICAVI';
+                    } else {
+                        $objects[$id]['TIPO_CONTO'] = null;
+                    }
+                }
+            }
         }
         
-        return [$objects, $count];
+        return [$objects, count($objects)];
     }
     
     function avanzamentoWorkflow($codCommessa) {
