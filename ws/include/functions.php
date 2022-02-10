@@ -252,5 +252,30 @@ function insert_select($table, $lista_tutte_le_colonne, $mappa_valori_da_modific
     return $sql;
 }
 
+/**
+ * Create a map with given keys, whose values are $array elements
+ * 
+ * e.g. [[NOME=>Carlo, COGNOME=>Rossi],[NOME=>Paolo, COGNOME=>Bianchi]]
+ * con columns=[NOME,COGNOME]
+ * risultato:
+ * map[Carlo][Rossi]   =  [NOME=>Carlo, COGNOME=>Rossi]
+ * map[Paolo][Bianchi] =  [NOME=>Paolo, COGNOME=>Bianchi]
+ */
+function array_group_by($array, $columns) {
+    $map = [];
+    foreach($array as $elm) {
+        $father = &$map;
+        foreach ($columns as $col) {
+            $value = $elm[$col];
+            if (!isset($father[$value])) {
+                $father[$value] = [];
+            }
+            $father = &$father[$value];
+        }
+        $father[]= $elm;
+    }
+    return $map;
+}
+
 
 ?>
