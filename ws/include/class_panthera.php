@@ -192,23 +192,33 @@ class PantheraManager {
             }
         } else {
             $statoIniziale = STATO_WF_START;
+            $conti_transitori_imploded = "'" . implode("','", array_keys($matrice_conti)) .  "'";
+            $conti_ricavi_imploded = "'" . implode("','", array_values($matrice_conti)) .  "'";
             //$sql0 = "SELECT COUNT(*) AS cnt
             //        FROM THIP.BOH
             //        WHERE ID_AZIENDA='001' AND STATO_WF=$statoIniziale";
             $sql1 = "SELECT
-                        S.GPV0CD as COD_CONTO,
-                        S.GPD0CD as COD_COMMESSA,
-                        CD.DESCRIZIONE as DES_COMMESSA,
-                        S.T36CD as COD_DIVISIONE,
-                        CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END as COD_CLIENTE,
-                        CLI.RAGIONE_SOCIALE as CLI_RA_SOC,
-                        (GSL0AUCA-GSL0DUCA) as SALDO,
-                        S.GPC0CD as CENTRO_COSTO
-                    FROM [FINANCE].[GSL0PT] S
+                        RTRIM(S.GPV0CD) as COD_CONTO,
+                        RTRIM(S.GPD0CD) as COD_COMMESSA,
+                        RTRIM(CD.DESCRIZIONE) as DES_COMMESSA,
+                        RTRIM(S.T36CD) as COD_DIVISIONE,
+                        CASE WHEN RTRIM(CLICD) !='' THEN RTRIM(CLICD) ELSE RTRIM(GPS4CD) END as COD_CLIENTE,
+                        RTRIM(CLI.RAGIONE_SOCIALE) as CLI_RA_SOC,
+                        (S.GSL0AUCA-S.GSL0DUCA) as SALDO,
+                        --    FAT.TOT_FATTURATO,
+                        RTRIM(S.GPC0CD) as CENTRO_COSTO,
+                        CASE WHEN S.GPV0CD in ($conti_transitori_imploded) THEN 'TRANSITORIO' ELSE 'RICAVI' END AS TIPO_CONTO
+                    FROM FINANCE.GSL0PT S
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
                     LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
                     LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
+                    --LEFT JOIN (
+                    --    SELECT ID_AZIENDA, R_COMMESSA, sum(IMPORTO_VP) as TOT_FATTURATO
+                    --    FROM THIP.YSTAT_FATVEN_V01
+                    --    where ID_AZIENDA = '001' and R_COMMESSA is not null and ID_ANNO_DOC > 2020
+                    --    group by ID_AZIENDA, R_COMMESSA
+                    --) FAT on FAT.ID_AZIENDA = S.T01CD and FAT.R_COMMESSA = S.GPD0CD
                     WHERE GT01CD = 'BASE'
                         and T01CD = '001'
                         and GT02CD = 'CONS'
@@ -216,13 +226,15 @@ class PantheraManager {
                         and GS02CD = '*****'
                         and GPV0CD not like 'ZZ%'
                         and DATEPART(yy, GAT0CD) = 2022
-                        and S.GPD0CD = '$codCommessa'
+                        and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
+                        -- and S.GPD0CD = '$codCommessa'
                         -- and WF_NODE_ID='$statoIniziale'
                     GROUP BY
-                        S.GPV0CD,S.GPD0CD,S.T36CD,S.GPC0CD,
+                        S.GPV0CD,S.GPD0CD,S.T36CD,S.GPC0CD,S.GSL0AUCA,S.GSL0DUCA,
                         CD.DESCRIZIONE,
-                        CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END,
+                        CASE WHEN RTRIM(CLICD) !='' THEN RTRIM(CLICD) ELSE RTRIM(GPS4CD) END,
                         CLI.RAGIONE_SOCIALE
+                    --    FAT.TOT_FATTURATO
                     ORDER BY COD_COMMESSA ";
             $objects = $this->select_list($sql1);
 
@@ -230,23 +242,24 @@ class PantheraManager {
             // invece ne voglio una sola
 
             if (count($objects) > 0) {
-                $conti_transitori = array_keys($matrice_conti);
-                $conti_ricavi = array_values($matrice_conti);
-
-                $groups = array_group_by($objects, 'COD_COMMESSA');
+                $groups = array_group_by($objects, ['COD_COMMESSA']);
                 $result = [];
                 foreach($groups as $codCommessa => $conti) {
                     $contoTransitorio = [];
                     $saldoTransitorio = 0.0;
-                    $contoRicavi = '';
+                    $contoRicavi = [];
                     $saldoRicavi = 0.0;
                     foreach($conti as $row) {
-                        if (in_array($row['COD_CONTO'], $conti_transitori)) {
-                            $contoTransitorio[] = $row['COD_CONTO'];
-                            $saldoTransitorio += $row['SALDO'];
-                        } else if (in_array($row['COD_CONTO'], $conti_ricavi)) {
-                            $contoRicavi[] = $row['COD_CONTO'];
-                            $saldoRicavi += $row['SALDO'];
+                        if ($row['TIPO_CONTO'] == 'TRANSITORIO') {
+                            if (!in_array($row['COD_CONTO'], $contoTransitorio)) {
+                                $contoTransitorio[] = $row['COD_CONTO'];
+                            }
+                            $saldoTransitorio += (float)$row['SALDO'];
+                        } else {
+                            if (!in_array($row['COD_CONTO'], $contoRicavi)) {
+                                $contoRicavi[] = $row['COD_CONTO'];
+                            }
+                            $saldoRicavi += (float)$row['SALDO'];
                         }
                     }
                     // il conto transitorio dovrebbe essere unico, e pure il conto ricavi, e
@@ -261,6 +274,7 @@ class PantheraManager {
 
                     $firstRow = $conti[0];
                     unset($firstRow['COD_CONTO']);
+                    unset($firstRow['SALDO']);
                     $firstRow['CONTO_TRANSITORIO'] = implode(';', $contoTransitorio);
                     $firstRow['SALDO_CONTO_TRANSITORIO'] = $saldoTransitorio;
                     $firstRow['CONTO_RICAVI'] = implode(';', $contoRicavi);
@@ -268,7 +282,7 @@ class PantheraManager {
                     $result[] = $firstRow;
                 }
 
-                $objects = $results;
+                $objects = $result;
             }
         }
         return [$objects, count($objects)];
@@ -300,8 +314,8 @@ class PantheraManager {
     function getVistaAnalisiCommessa($codCommessa) {
         global $matrice_conti;
         if ($this->mock) {
-            $objects = [ [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Fixture for seed attachment (n° 2)', 'COD_CLIENTE' => '006409              ', 'CLI_RA_SOC' => 'STMicroelectronics Silicon Carbide', 'COD_DIVISIONE' => 'SMP', 'COD_ARTICOLO' => 'F101010', 'DES_ARTICOLO' => '.', 'COD_ARTICOLO_RIF' => '', 'CENTRO_COSTO' => 'A51', 'DARE' => 0, 'AVERE' => 20000, 'CONTO' => '606004              ', 'ESERCIZIO' => '2022', 'TIPO_CONTO' => 'TRANSITORIO' ],
-                      [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Fixture for seed attachment (n° 2)', 'COD_CLIENTE' => '006409              ', 'CLI_RA_SOC' => 'STMicroelectronics Silicon Carbide', 'COD_DIVISIONE' => 'SMP', 'COD_ARTICOLO' => 'F101010', 'DES_ARTICOLO' => '.', 'COD_ARTICOLO_RIF' => '', 'CENTRO_COSTO' => 'A51', 'DARE' => 10000, 'AVERE' => 0, 'CONTO' => '901002              ', 'ESERCIZIO' => '2022', 'TIPO_CONTO' => 'RICAVI'  ]
+            $objects = [ [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Fixture for seed attachment (n° 2)', 'COD_CLIENTE' => '006409              ', 'CLI_RA_SOC' => 'STMicroelectronics Silicon Carbide', 'COD_DIVISIONE' => 'SMP', 'COD_ARTICOLO' => 'F101010', 'DES_ARTICOLO' => '.', 'COD_ARTICOLO_RIF' => '', 'CENTRO_COSTO' => 'A51', 'DARE' => 0, 'AVERE' => 20000, 'COD_CONTO' => '606004              ', 'ESERCIZIO' => '2022', 'TIPO_CONTO' => 'TRANSITORIO' ],
+                      [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Fixture for seed attachment (n° 2)', 'COD_CLIENTE' => '006409              ', 'CLI_RA_SOC' => 'STMicroelectronics Silicon Carbide', 'COD_DIVISIONE' => 'SMP', 'COD_ARTICOLO' => 'F101010', 'DES_ARTICOLO' => '.', 'COD_ARTICOLO_RIF' => '', 'CENTRO_COSTO' => 'A51', 'DARE' => 10000, 'AVERE' => 0, 'COD_CONTO' => '901002              ', 'ESERCIZIO' => '2022', 'TIPO_CONTO' => 'RICAVI'  ]
                      ];
         } else {
             $sql1 = "SELECT
@@ -343,7 +357,7 @@ class PantheraManager {
                 foreach($objects as $id => $row) {
                     if (in_array($row['COD_CONTO'], $conti_transitori)) {
                         $objects[$id]['TIPO_CONTO'] = 'TRANSITORIO';
-                    } else (in_array($row['COD_CONTO'], $conti_ricavi)) {
+                    } else if (in_array($row['COD_CONTO'], $conti_ricavi)) {
                         $objects[$id]['TIPO_CONTO'] = 'RICAVI';
                     } else {
                         $objects[$id]['TIPO_CONTO'] = null;
