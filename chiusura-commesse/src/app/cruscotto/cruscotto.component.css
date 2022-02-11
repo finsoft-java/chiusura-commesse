@@ -22,10 +22,15 @@
 
 button {
     width: 40mm;
+    margin: 5px 0px 0px 0px;
+}
+
+td > button:nth-child(0){
+    margin: 0px 0px 5px 0px;
 }
 
 td, th {
-    text-align: center;
+    text-align: center !important;
 }
 
 .importi {
