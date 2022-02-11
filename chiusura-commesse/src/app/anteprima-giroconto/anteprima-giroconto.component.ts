@@ -61,16 +61,33 @@ export class AnteprimaGirocontoComponent implements OnInit {
 
   prepareDataCoAn(l: VistaAnalisiCommessa[]) {
     const data: RigaContoAnalitica[] = [];
+    const map = [];
     l.forEach(x => {
-      data.push({
-        CONTO: x.COD_CONTO,
-        VERSO: x.TIPO_CONTO === 'TRANSITORIO' ? 'AVERE' : 'DARE',
-        IMPORTO: x.SALDO,
-        COD_ARTICOLO: x.COD_ARTICOLO,
-        COD_ARTICOLO_RIF: x.COD_ARTICOLO_RIF,
-        CENTRO_COSTO: x.CENTRO_COSTO,
-        COD_DIVISIONE: x.COD_DIVISIONE
-      });
+      // considero solamente le righe dei conti transitori
+      if (x.TIPO_CONTO === 'TRANSITORIO' && x.CONTO_RICAVI) {
+        const r: RigaContoAnalitica = {
+          CONTO: x.COD_CONTO,
+          VERSO: 'AVERE',
+          IMPORTO: x.SALDO,
+          COD_ARTICOLO: x.COD_ARTICOLO,
+          COD_ARTICOLO_RIF: x.COD_ARTICOLO_RIF,
+          CENTRO_COSTO: x.CENTRO_COSTO,
+          COD_DIVISIONE: x.COD_DIVISIONE
+        };
+        data.push(r);
+        const r2: RigaContoAnalitica = {
+          CONTO: x.CONTO_RICAVI,
+          VERSO: 'DARE',
+          IMPORTO: x.SALDO,
+          COD_ARTICOLO: x.COD_ARTICOLO,
+          COD_ARTICOLO_RIF: x.COD_ARTICOLO_RIF,
+          CENTRO_COSTO: x.CENTRO_COSTO,
+          COD_DIVISIONE: x.COD_DIVISIONE
+        };
+        data.push(r2);
+      } else if (!x.CONTO_RICAVI) {
+        console.log('CONTO_RICAVI is null !?!', x);
+      }
     });
 
     this.dataSourceAnal = new MatTableDataSource<RigaContoAnalitica>(data);

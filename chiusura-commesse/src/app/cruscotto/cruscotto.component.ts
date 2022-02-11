@@ -52,17 +52,17 @@ export class CruscottoComponent implements OnInit {
 
   validazione(x: VistaCruscotto) {
     console.log(x);
-    if (x.CONTO_TRANSITORIO === null || x.CONTO_TRANSITORIO === '' || x.CONTO_RICAVI === undefined
-                                                      || x.CONTO_RICAVI === null || x.CONTO_RICAVI === '') {
-      x.TIPO = 5; // c'è qualche problema, l'utente deve correggere in Panthera
+    if (x.CONTO_TRANSITORIO === null || x.CONTO_TRANSITORIO === '' || x.CONTO_TRANSITORIO.includes(';')
+        || x.CONTO_RICAVI === undefined || x.CONTO_RICAVI === null || x.CONTO_RICAVI === '' || x.CONTO_RICAVI.includes(';')) {
+      x.TIPO = 5; // c'è qualche problema (conti non ben determinati), l'utente deve correggere in Panthera
     } else if (x.TOT_FATTURATO !== (x.SALDO_CONTO_RICAVI + x.SALDO_CONTO_TRANSITORIO)) {
-      x.TIPO = 4; // c'è qualche problema, l'utente deve correggere in Panthera
+      x.TIPO = 4; // c'è qualche problema (squadratura), l'utente deve correggere in Panthera
     } else if (x.SALDO_CONTO_TRANSITORIO === 0.0) {
       x.TIPO = 1; // non serve giroconto, si può chiudere
     } else if (x.SALDO_CONTO_RICAVI === 0.0) {
       x.TIPO = 2; // serve giroconto, poi diventa di tipo 1
     } else {
-      x.TIPO = 3; // serve giroconto e anche una verifica da parte dell'utente, poi diventa di tipo 1
+      x.TIPO = 3; // serve giroconto (parziale) e anche una verifica da parte dell'utente, poi diventa di tipo 1
     }
   }
 

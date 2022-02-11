@@ -205,7 +205,7 @@ class PantheraManager {
                         CASE WHEN RTRIM(CLICD) !='' THEN RTRIM(CLICD) ELSE RTRIM(GPS4CD) END as COD_CLIENTE,
                         RTRIM(CLI.RAGIONE_SOCIALE) as CLI_RA_SOC,
                         (S.GSL0AUCA-S.GSL0DUCA) as SALDO,
-                        --    FAT.TOT_FATTURATO,
+                        FAT.TOT_FATTURATO,
                         RTRIM(S.GPC0CD) as CENTRO_COSTO,
                         CASE WHEN S.GPV0CD in ($conti_transitori_imploded) THEN 'TRANSITORIO' ELSE 'RICAVI' END AS TIPO_CONTO
                     FROM FINANCE.GSL0PT S
@@ -213,12 +213,12 @@ class PantheraManager {
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
                     LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
                     LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
-                    --LEFT JOIN (
-                    --    SELECT ID_AZIENDA, R_COMMESSA, sum(IMPORTO_VP) as TOT_FATTURATO
-                    --    FROM THIP.YSTAT_FATVEN_V01
-                    --    where ID_AZIENDA = '001' and R_COMMESSA is not null and ID_ANNO_DOC > 2020
-                    --    group by ID_AZIENDA, R_COMMESSA
-                    --) FAT on FAT.ID_AZIENDA = S.T01CD and FAT.R_COMMESSA = S.GPD0CD
+                    LEFT JOIN (
+                        SELECT ID_AZIENDA, R_COMMESSA, sum(IMPORTO_VP) as TOT_FATTURATO
+                        FROM THIP.YSTAT_FATVEN_V01
+                        where ID_AZIENDA = '001' and R_COMMESSA is not null and ID_ANNO_DOC > 2020
+                        group by ID_AZIENDA, R_COMMESSA
+                    ) FAT on FAT.ID_AZIENDA = S.T01CD and FAT.R_COMMESSA = S.GPD0CD
                     WHERE GT01CD = 'BASE'
                         and T01CD = '001'
                         and GT02CD = 'CONS'
@@ -233,8 +233,8 @@ class PantheraManager {
                         S.GPV0CD,S.GPD0CD,S.T36CD,S.GPC0CD,S.GSL0AUCA,S.GSL0DUCA,
                         CD.DESCRIZIONE,
                         CASE WHEN RTRIM(CLICD) !='' THEN RTRIM(CLICD) ELSE RTRIM(GPS4CD) END,
-                        CLI.RAGIONE_SOCIALE
-                    --    FAT.TOT_FATTURATO
+                        CLI.RAGIONE_SOCIALE,
+                        FAT.TOT_FATTURATO
                     ORDER BY COD_COMMESSA ";
             $objects = $this->select_list($sql1);
 
@@ -279,6 +279,7 @@ class PantheraManager {
                     $firstRow['SALDO_CONTO_TRANSITORIO'] = $saldoTransitorio;
                     $firstRow['CONTO_RICAVI'] = implode(';', $contoRicavi);
                     $firstRow['SALDO_CONTO_RICAVI'] = $saldoRicavi;
+                    $firstRow['TOT_FATTURATO'] = (float)$firstRow['TOT_FATTURATO'];
                     $result[] = $firstRow;
                 }
 
@@ -288,29 +289,6 @@ class PantheraManager {
         return [$objects, count($objects)];
     }
 
-  /*  function getVistaCruscottoById($codCommessa) {
-        if ($this->mock) {
-            $object = [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Implementazione su Linea a Banchi', 'COD_CLIENTE' => '006416','CLI_RA_SOC'=>'BREMBO SPA','COD_DIVISIONE' => 'AUT', 'TOT_FATTURATO' => 50000, 'SALDO_CONTO_TRANSITORIO' => 50000 , 'SALDO_CONTO_RICAVI' => 0.0, 'CONTO_TRANSITORIO' => '606004' ];
-        } else {
-            $sql = "SELECT COD_COMMESSA,DESCRIZIONE,COD_CLIENTE,COD_DIVISIONE,TOT_FATTURATO,
-                        -1 as SALDO_CONTO_TRANSITORIO,
-                        -1 as SALDO_CONTO_RICAVI,
-                        COD_CONTO as CONTO_TRANSITORIO
-                    FROM THIP.COMMESSE
-                    WHERE ID_AZIENDA='001' AND COD_COMMESSA='$codCommessa' ";
-
-            $object = $this->select_single($sql);
-        }
-
-        global $matrice_conti;
-        $contoTransitorio = $object['CONTO_TRANSITORIO'];
-        if (isset($matrice_conti[$contoTransitorio])) {
-            $object['CONTO_RICAVI'] = $matrice_conti[$contoTransitorio];
-        }
-        
-        return $object;
-    }*/
-
     function getVistaAnalisiCommessa($codCommessa) {
         global $matrice_conti;
         if ($this->mock) {
@@ -318,6 +296,8 @@ class PantheraManager {
                       [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Fixture for seed attachment (n° 2)', 'COD_CLIENTE' => '006409              ', 'CLI_RA_SOC' => 'STMicroelectronics Silicon Carbide', 'COD_DIVISIONE' => 'SMP', 'COD_ARTICOLO' => 'F101010', 'DES_ARTICOLO' => '.', 'COD_ARTICOLO_RIF' => '', 'CENTRO_COSTO' => 'A51', 'DARE' => 10000, 'AVERE' => 0, 'COD_CONTO' => '901002              ', 'ESERCIZIO' => '2022', 'TIPO_CONTO' => 'RICAVI'  ]
                      ];
         } else {
+            $conti_transitori_imploded = "'" . implode("','", array_keys($matrice_conti)) .  "'";
+            $conti_ricavi_imploded = "'" . implode("','", array_values($matrice_conti)) .  "'";
             $sql1 = "SELECT
                         S.GPV0CD as COD_CONTO,
                         S.GPD0CD as COD_COMMESSA,
@@ -332,8 +312,9 @@ class PantheraManager {
                         GSL0AUCA as AVERE,
                         (GSL0AUCA-GSL0DUCA) as SALDO,
                         DATEPART(yy, S.GAT0CD) as ESERCIZIO,
-                        GPC0CD as CENTRO_COSTO
-                    FROM [FINANCE].[GSL0PT] S
+                        GPC0CD as CENTRO_COSTO,
+                        CASE WHEN S.GPV0CD in ($conti_transitori_imploded) THEN 'TRANSITORIO' ELSE 'RICAVI' END AS TIPO_CONTO
+                    FROM FINANCE.GSL0PT S
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
                     LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
@@ -348,19 +329,16 @@ class PantheraManager {
                         --and GPC0CD = 'CR001'
                         --and not (GSL0DUCA = 0 and GSL0AUCA = 0)
                         and S.GPD0CD = '$codCommessa'
+                        and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
                     ORDER BY COD_CONTO";
             $objects = $this->select_list($sql1);
 
             if (count($objects) > 0) {
-                $conti_transitori = array_keys($matrice_conti);
-                $conti_ricavi = array_values($matrice_conti);
                 foreach($objects as $id => $row) {
-                    if (in_array($row['COD_CONTO'], $conti_transitori)) {
-                        $objects[$id]['TIPO_CONTO'] = 'TRANSITORIO';
-                    } else if (in_array($row['COD_CONTO'], $conti_ricavi)) {
-                        $objects[$id]['TIPO_CONTO'] = 'RICAVI';
+                    if ($row['TIPO_CONTO'] == 'TRANSITORIO') {
+                        $objects[$id]['CONTO_RICAVI'] = $matrice_conti[$id['COD_CONTO']];
                     } else {
-                        $objects[$id]['TIPO_CONTO'] = null;
+                        $objects[$id]['CONTO_RICAVI'] = null;
                     }
                 }
             }

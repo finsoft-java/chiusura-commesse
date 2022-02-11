@@ -13,4 +13,5 @@ export interface VistaAnalisiCommessa {
   SALDO: number;
   ESERCIZIO: number;
   TIPO_CONTO: 'TRANSITORIO' | 'RICAVI' | null;
+  CONTO_RICAVI: string | null;
 }
