@@ -19,3 +19,7 @@
 .typeDropdown {
     width: 230px;
 }
+
+td {
+    text-align: right;
+}

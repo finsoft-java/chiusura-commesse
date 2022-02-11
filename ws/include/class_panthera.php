@@ -185,7 +185,7 @@ class PantheraManager {
                      ];
                      
             foreach($objects as $id => $obj) {
-                $contoTransitorio = $obj['COD_CONTO'];
+                $contoTransitorio = $obj['CONTO_TRANSITORIO'];
                 if (isset($matrice_conti[$contoTransitorio])) {
                     $objects[$id]['CONTO_RICAVI'] = $matrice_conti[$contoTransitorio];
                 }
@@ -214,7 +214,8 @@ class PantheraManager {
                     LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
                     LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
                     LEFT JOIN (
-                        SELECT ID_AZIENDA, R_COMMESSA, sum(IMPORTO_VP) as TOT_FATTURATO
+                        SELECT ID_AZIENDA, R_COMMESSA,
+                            sum(CASE WHEN(TP_DOC_VEN = 1) THEN IMPORTO_VP ELSE -IMPORTO_VP END) as TOT_FATTURATO
                         FROM THIP.YSTAT_FATVEN_V01
                         where ID_AZIENDA = '001' and R_COMMESSA is not null and ID_ANNO_DOC > 2020
                         group by ID_AZIENDA, R_COMMESSA

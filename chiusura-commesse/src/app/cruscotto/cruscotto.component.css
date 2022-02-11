@@ -23,3 +23,7 @@
 button {
     width: 40mm;
 }
+
+td {
+    text-align: right;
+}

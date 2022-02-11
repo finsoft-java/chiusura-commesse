@@ -1,8 +1,10 @@
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
-import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, NgModule, LOCALE_ID } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { registerLocaleData } from '@angular/common';
+import localeIt from '@angular/common/locales/it';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgMaterialMultilevelMenuModule } from 'ng-material-multilevel-menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -33,6 +35,8 @@ import { JwtInterceptor } from './_helpers/jwt.interceptor';
 import { CruscottoComponent } from './cruscotto/cruscotto.component';
 import { AnalisiCommessaComponent } from './analisi-commessa/analisi-commessa.component';
 import { AnteprimaGirocontoComponent } from './anteprima-giroconto/anteprima-giroconto.component';
+
+registerLocaleData(localeIt);
 
 @NgModule({
   declarations: [
@@ -74,7 +78,8 @@ import { AnteprimaGirocontoComponent } from './anteprima-giroconto/anteprima-gir
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
-    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true }
+    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
+    { provide: LOCALE_ID, useValue: 'it-IT'}
   ],
   bootstrap: [AppComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
