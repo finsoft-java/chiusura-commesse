@@ -174,7 +174,7 @@ class PantheraManager {
         }
     }
 
-    function getVistaCruscotto() {
+    function getVistaCruscotto($codCommessa='') {
         global $matrice_conti;
         if ($this->mock) {
             $objects = [ [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Implementazione su Linea a Banchi', 'COD_CLIENTE' => '006416','CLI_RA_SOC'=>'BREMBO SPA','COD_DIVISIONE' => 'AUT', 'TOT_FATTURATO' => 50000, 'SALDO_CONTO_TRANSITORIO' => 50000 , 'SALDO_CONTO_RICAVI' => 0.0, 'CONTO_TRANSITORIO' => '606004' ],
@@ -228,6 +228,7 @@ class PantheraManager {
                         and GPV0CD not like 'ZZ%'
                         and DATEPART(yy, GAT0CD) = 2022
                         and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
+                        and ('$codCommessa'='' or S.GPD0CD='$codCommessa')
                         -- and S.GPD0CD = '$codCommessa'
                         -- and WF_NODE_ID='$statoIniziale'
                     GROUP BY
@@ -293,27 +294,27 @@ class PantheraManager {
     function getVistaAnalisiCommessa($codCommessa) {
         global $matrice_conti;
         if ($this->mock) {
-            $objects = [ [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Fixture for seed attachment (n° 2)', 'COD_CLIENTE' => '006409              ', 'CLI_RA_SOC' => 'STMicroelectronics Silicon Carbide', 'COD_DIVISIONE' => 'SMP', 'COD_ARTICOLO' => 'F101010', 'DES_ARTICOLO' => '.', 'COD_ARTICOLO_RIF' => '', 'CENTRO_COSTO' => 'A51', 'DARE' => 0, 'AVERE' => 20000, 'COD_CONTO' => '606004              ', 'ESERCIZIO' => '2022', 'TIPO_CONTO' => 'TRANSITORIO' ],
-                      [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Fixture for seed attachment (n° 2)', 'COD_CLIENTE' => '006409              ', 'CLI_RA_SOC' => 'STMicroelectronics Silicon Carbide', 'COD_DIVISIONE' => 'SMP', 'COD_ARTICOLO' => 'F101010', 'DES_ARTICOLO' => '.', 'COD_ARTICOLO_RIF' => '', 'CENTRO_COSTO' => 'A51', 'DARE' => 10000, 'AVERE' => 0, 'COD_CONTO' => '901002              ', 'ESERCIZIO' => '2022', 'TIPO_CONTO' => 'RICAVI'  ]
+            $objects = [ [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Fixture for seed attachment (n° 2)', 'COD_CLIENTE' => '006409', 'CLI_RA_SOC' => 'STMicroelectronics Silicon Carbide', 'COD_DIVISIONE' => 'SMP', 'COD_ARTICOLO' => 'F101010', 'DES_ARTICOLO' => '.', 'COD_ARTICOLO_RIF' => '', 'CENTRO_COSTO' => 'A51', 'DARE' => 0, 'AVERE' => 50000, 'SALDO' => 50000, 'COD_CONTO' => '606004', 'ESERCIZIO' => '2022', 'TIPO_CONTO' => 'TRANSITORIO' ],
+                      [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Fixture for seed attachment (n° 2)', 'COD_CLIENTE' => '006409', 'CLI_RA_SOC' => 'STMicroelectronics Silicon Carbide', 'COD_DIVISIONE' => 'SMP', 'COD_ARTICOLO' => 'F101010', 'DES_ARTICOLO' => '.', 'COD_ARTICOLO_RIF' => '', 'CENTRO_COSTO' => 'A51', 'DARE' => 50000, 'AVERE' => 0, 'SALDO' => -50000, 'COD_CONTO' => '901002', 'ESERCIZIO' => '2022', 'TIPO_CONTO' => 'RICAVI'  ]
                      ];
         } else {
             $conti_transitori_imploded = "'" . implode("','", array_keys($matrice_conti)) .  "'";
             $conti_ricavi_imploded = "'" . implode("','", array_values($matrice_conti)) .  "'";
             $sql1 = "SELECT
-                        S.GPV0CD as COD_CONTO,
-                        S.GPD0CD as COD_COMMESSA,
-                        CD.DESCRIZIONE as DES_COMMESSA,
-                        S.T36CD as COD_DIVISIONE,
-                        CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END as COD_CLIENTE,
-                        CLI.RAGIONE_SOCIALE as CLI_RA_SOC,				
-                        S.GPS2CD as COD_ARTICOLO,
-                        AR.DESCR_ESTESA as DES_ARTICOLO,
-                        GPS3CD as COD_ARTICOLO_RIF,
+                        RTRIM(S.GPV0CD) as COD_CONTO,
+                        RTRIM(S.GPD0CD) as COD_COMMESSA,
+                        RTRIM(CD.DESCRIZIONE) as DES_COMMESSA,
+                        RTRIM(S.T36CD) as COD_DIVISIONE,
+                        CASE WHEN CLICD !='' THEN RTRIM(CLICD) ELSE RTRIM(GPS4CD) END as COD_CLIENTE,
+                        RTRIM(CLI.RAGIONE_SOCIALE) as CLI_RA_SOC,				
+                        RTRIM(S.GPS2CD) as COD_ARTICOLO,
+                        RTRIM(AR.DESCR_ESTESA) as DES_ARTICOLO,
+                        RTRIM(GPS3CD) as COD_ARTICOLO_RIF,
                         GSL0DUCA as DARE,
                         GSL0AUCA as AVERE,
                         (GSL0AUCA-GSL0DUCA) as SALDO,
                         DATEPART(yy, S.GAT0CD) as ESERCIZIO,
-                        GPC0CD as CENTRO_COSTO,
+                        RTRIM(GPC0CD) as CENTRO_COSTO,
                         CASE WHEN S.GPV0CD in ($conti_transitori_imploded) THEN 'TRANSITORIO' ELSE 'RICAVI' END AS TIPO_CONTO
                     FROM FINANCE.GSL0PT S
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
@@ -333,18 +334,18 @@ class PantheraManager {
                         and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
                     ORDER BY COD_CONTO";
             $objects = $this->select_list($sql1);
-
-            if (count($objects) > 0) {
-                foreach($objects as $id => $row) {
-                    if ($row['TIPO_CONTO'] == 'TRANSITORIO') {
-                        $objects[$id]['CONTO_RICAVI'] = $matrice_conti[$id['COD_CONTO']];
-                    } else {
-                        $objects[$id]['CONTO_RICAVI'] = null;
-                    }
+        }
+        
+        if (count($objects) > 0) {
+            foreach($objects as $id => $row) {
+                if ($row['TIPO_CONTO'] == 'TRANSITORIO') {
+                    $objects[$id]['CONTO_RICAVI'] = $matrice_conti[$row['COD_CONTO']];
+                } else {
+                    $objects[$id]['CONTO_RICAVI'] = null;
                 }
             }
         }
-        
+
         return [$objects, count($objects)];
     }
     

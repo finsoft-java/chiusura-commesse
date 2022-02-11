@@ -21,10 +21,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode(['data' => $list, 'count' => $count]);
 
     } else {
-        $object = $panthera->getVistaCruscottoById($codCommessa);
+        [$list, $count] = $panthera->getVistaCruscotto($codCommessa);
+        if ($count == 0) {
+            print_error(404, "Commessa non trovata: $codCommessa");
+        }
           
         header('Content-Type: application/json');
-        echo json_encode(['value' => $object]);
+        echo json_encode(['value' => $list[0]]);
     }
     
 } else {
