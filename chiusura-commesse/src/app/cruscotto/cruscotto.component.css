@@ -24,6 +24,10 @@ button {
     width: 40mm;
 }
 
-td {
+td, th {
+    text-align: center;
+}
+
+.importi {
     text-align: right;
 }

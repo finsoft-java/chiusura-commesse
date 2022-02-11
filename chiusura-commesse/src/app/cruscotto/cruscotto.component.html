@@ -20,24 +20,24 @@ In questa schermata vengono presentate tutte le commesse in stato workflow "Inst
         <td mat-cell *matCellDef="let element" [title]="element.CLI_RA_SOC"> {{ element.COD_CLIENTE }} </td>
     </ng-container>
     <ng-container matColumnDef="fatturato">
-        <th mat-header-cell *matHeaderCellDef> Tot. Fatturato </th>
-        <td mat-cell *matCellDef="let element"> {{ element.TOT_FATTURATO|number:'1.2' }} </td>
+        <th mat-header-cell *matHeaderCellDef class="importi"> Tot. Fatturato </th>
+        <td mat-cell *matCellDef="let element" class="importi"> {{ element.TOT_FATTURATO|number:'1.2' }} </td>
     </ng-container>
     <ng-container matColumnDef="contoTransitorio">
         <th mat-header-cell *matHeaderCellDef> Conto transitorio </th>
         <td mat-cell *matCellDef="let element"> {{ element.CONTO_TRANSITORIO }} </td>
     </ng-container>
     <ng-container matColumnDef="saldoTr">
-        <th mat-header-cell *matHeaderCellDef> Saldo conto transitorio </th>
-        <td mat-cell *matCellDef="let element"> {{ element.SALDO_CONTO_TRANSITORIO|number:'1.2' }} </td>
+        <th mat-header-cell *matHeaderCellDef class="importi"> Saldo conto transitorio </th>
+        <td mat-cell *matCellDef="let element" class="importi"> {{ element.SALDO_CONTO_TRANSITORIO|number:'1.2' }} </td>
     </ng-container>
     <ng-container matColumnDef="contoRicavi">
         <th mat-header-cell *matHeaderCellDef> Conto ricavi </th>
         <td mat-cell *matCellDef="let element"> {{ element.CONTO_RICAVI}} </td>
     </ng-container>
     <ng-container matColumnDef="saldoRicavi">
-        <th mat-header-cell *matHeaderCellDef> Saldo conto ricavi </th>
-        <td mat-cell *matCellDef="let element"> {{ element.SALDO_CONTO_RICAVI|number:'1.2' }} </td>
+        <th mat-header-cell *matHeaderCellDef class="importi"> Saldo conto ricavi </th>
+        <td mat-cell *matCellDef="let element" class="importi"> {{ element.SALDO_CONTO_RICAVI|number:'1.2' }} </td>
     </ng-container>
     <ng-container matColumnDef="warning">
         <th mat-header-cell *matHeaderCellDef> Esito validazione </th>

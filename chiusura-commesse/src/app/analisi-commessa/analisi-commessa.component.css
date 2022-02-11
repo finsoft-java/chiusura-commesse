@@ -20,6 +20,10 @@
     width: 230px;
 }
 
-td {
+td, th {
+    text-align: center;
+}
+
+.importi {
     text-align: right;
 }

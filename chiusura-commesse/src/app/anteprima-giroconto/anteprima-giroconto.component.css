@@ -19,3 +19,11 @@
 .typeDropdown {
     width: 230px;
 }
+
+td, th {
+    text-align: center;
+}
+
+.importi {
+    text-align: right;
+}
