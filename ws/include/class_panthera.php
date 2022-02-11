@@ -204,7 +204,7 @@ class PantheraManager {
                         RTRIM(S.T36CD) as COD_DIVISIONE,
                         CASE WHEN RTRIM(CLICD) !='' THEN RTRIM(CLICD) ELSE RTRIM(GPS4CD) END as COD_CLIENTE,
                         RTRIM(CLI.RAGIONE_SOCIALE) as CLI_RA_SOC,
-                        (S.GSL0AUCA-S.GSL0DUCA) as SALDO,
+                        SUM(S.GSL0AUCA-S.GSL0DUCA) as SALDO,
                         FAT.TOT_FATTURATO,
                         RTRIM(S.GPC0CD) as CENTRO_COSTO,
                         CASE WHEN S.GPV0CD in ($conti_transitori_imploded) THEN 'TRANSITORIO' ELSE 'RICAVI' END AS TIPO_CONTO
