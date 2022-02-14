@@ -35,7 +35,7 @@ $matrice_conti = [
 ];
 
 /* stati del workflow da gestire */
-define('STATO_WF_START', '123');
-define('STATO_WF_END', '456');
+define('STATO_WF_START', '0030');
+define('STATO_WF_END', '0040');
 
 ?>

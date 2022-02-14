@@ -194,9 +194,6 @@ class PantheraManager {
             $statoIniziale = STATO_WF_START;
             $conti_transitori_imploded = "'" . implode("','", array_keys($matrice_conti)) .  "'";
             $conti_ricavi_imploded = "'" . implode("','", array_values($matrice_conti)) .  "'";
-            //$sql0 = "SELECT COUNT(*) AS cnt
-            //        FROM THIP.BOH
-            //        WHERE ID_AZIENDA='001' AND STATO_WF=$statoIniziale";
             $sql1 = "SELECT
                         RTRIM(S.GPV0CD) as COD_CONTO,
                         RTRIM(S.GPD0CD) as COD_COMMESSA,
@@ -229,7 +226,6 @@ class PantheraManager {
                         and DATEPART(yy, GAT0CD) = 2022
                         and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
                         and ('$codCommessa'='' or S.GPD0CD='$codCommessa')
-                        -- and S.GPD0CD = '$codCommessa'
                         -- and WF_NODE_ID='$statoIniziale'
                     GROUP BY
                         S.GPV0CD,S.GPD0CD,S.T36CD,S.GPC0CD,S.GSL0AUCA,S.GSL0DUCA,
