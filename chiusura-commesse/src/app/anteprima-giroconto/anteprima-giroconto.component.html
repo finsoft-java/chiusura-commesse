@@ -30,7 +30,7 @@
         </ng-container>
         <ng-container matColumnDef="cliente">
             <th mat-header-cell *matHeaderCellDef> Cliente </th>
-            <td mat-cell *matCellDef="let element" [title]="element.CLI_RA_SOC"> {{ element.COD_CLIENTE }} </td>
+            <td mat-cell *matCellDef="let element" [title]="element.CLI_RA_SOC || ''"> {{ element.COD_CLIENTE }} </td>
         </ng-container>
         <ng-container matColumnDef="divisione">
             <th mat-header-cell *matHeaderCellDef> Divisione </th>
@@ -38,11 +38,11 @@
         </ng-container>
         <ng-container matColumnDef="articolo">
             <th mat-header-cell *matHeaderCellDef> Articolo </th>
-            <td mat-cell *matCellDef="let element" [title]="element.DES_ARTICOLO"> {{ element.COD_ARTICOLO }} </td>
+            <td mat-cell *matCellDef="let element" [title]="element.DES_ARTICOLO || ''"> {{ element.COD_ARTICOLO }} </td>
         </ng-container>
         <ng-container matColumnDef="artRif">
             <th mat-header-cell *matHeaderCellDef> Articolo rif.</th>
-            <td mat-cell *matCellDef="let element"> {{ element.ART_RIF }} </td>
+            <td mat-cell *matCellDef="let element" [title]="element.DES_ARTICOLO_RIF || ''"> {{ element.ART_RIF }} </td>
         </ng-container>
         <ng-container matColumnDef="centroCosto">
             <th mat-header-cell *matHeaderCellDef> Centro costo </th>

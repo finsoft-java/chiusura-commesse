@@ -69,8 +69,12 @@ export class AnteprimaGirocontoComponent implements OnInit {
           CONTO: x.COD_CONTO,
           VERSO: 'AVERE',
           IMPORTO: x.SALDO,
+          COD_CLIENTE: x.COD_CLIENTE,
+          CLI_RA_SOC: x.CLI_RA_SOC,
           COD_ARTICOLO: x.COD_ARTICOLO,
+          DES_ARTICOLO: x.DES_ARTICOLO,
           COD_ARTICOLO_RIF: x.COD_ARTICOLO_RIF,
+          DES_ARTICOLO_RIF: x.DES_ARTICOLO_RIF,
           CENTRO_COSTO: x.CENTRO_COSTO,
           COD_DIVISIONE: x.COD_DIVISIONE
         };
@@ -79,8 +83,12 @@ export class AnteprimaGirocontoComponent implements OnInit {
           CONTO: x.CONTO_RICAVI,
           VERSO: 'DARE',
           IMPORTO: x.SALDO,
+          COD_CLIENTE: x.COD_CLIENTE,
+          CLI_RA_SOC: x.CLI_RA_SOC,
           COD_ARTICOLO: x.COD_ARTICOLO,
+          DES_ARTICOLO: x.DES_ARTICOLO,
           COD_ARTICOLO_RIF: x.COD_ARTICOLO_RIF,
+          DES_ARTICOLO_RIF: x.DES_ARTICOLO_RIF,
           CENTRO_COSTO: x.CENTRO_COSTO,
           COD_DIVISIONE: x.COD_DIVISIONE
         };

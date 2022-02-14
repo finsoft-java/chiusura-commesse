@@ -4,9 +4,11 @@ export interface VistaAnalisiCommessa {
   DES_COMMESSA: string;
   COD_DIVISIONE: string;
   COD_CLIENTE: string;
-  DES_CLIENTE: string;
+  CLI_RA_SOC: string;
   COD_ARTICOLO: string;
+  DES_ARTICOLO: string;
   COD_ARTICOLO_RIF: string;
+  DES_ARTICOLO_RIF: string;
   CENTRO_COSTO: string;
   DARE: number;
   AVERE: number;

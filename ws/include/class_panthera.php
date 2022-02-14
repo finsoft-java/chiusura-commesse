@@ -202,8 +202,8 @@ class PantheraManager {
                         CASE WHEN RTRIM(CLICD) !='' THEN RTRIM(CLICD) ELSE RTRIM(GPS4CD) END as COD_CLIENTE,
                         RTRIM(CLI.RAGIONE_SOCIALE) as CLI_RA_SOC,
                         SUM(S.GSL0AUCA-S.GSL0DUCA) as SALDO,
-                        FAT.TOT_FATTURATO,
                         RTRIM(S.GPC0CD) as CENTRO_COSTO,
+                        FAT.TOT_FATTURATO,
                         CASE WHEN S.GPV0CD in ($conti_transitori_imploded) THEN 'TRANSITORIO' ELSE 'RICAVI' END AS TIPO_CONTO
                     FROM FINANCE.GSL0PT S
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
@@ -302,20 +302,22 @@ class PantheraManager {
                         RTRIM(CD.DESCRIZIONE) as DES_COMMESSA,
                         RTRIM(S.T36CD) as COD_DIVISIONE,
                         CASE WHEN CLICD !='' THEN RTRIM(CLICD) ELSE RTRIM(GPS4CD) END as COD_CLIENTE,
-                        RTRIM(CLI.RAGIONE_SOCIALE) as CLI_RA_SOC,				
+                        RTRIM(CLI.RAGIONE_SOCIALE) as CLI_RA_SOC,
                         RTRIM(S.GPS2CD) as COD_ARTICOLO,
                         RTRIM(AR.DESCR_ESTESA) as DES_ARTICOLO,
-                        RTRIM(GPS3CD) as COD_ARTICOLO_RIF,
+                        RTRIM(S.GPS3CD) as COD_ARTICOLO_RIF,
+                        RTRIM(AR2.DESCR_ESTESA) as DES_ARTICOLO_RIF,
+                        RTRIM(GPC0CD) as CENTRO_COSTO,
                         GSL0DUCA as DARE,
                         GSL0AUCA as AVERE,
                         (GSL0AUCA-GSL0DUCA) as SALDO,
                         DATEPART(yy, S.GAT0CD) as ESERCIZIO,
-                        RTRIM(GPC0CD) as CENTRO_COSTO,
                         CASE WHEN S.GPV0CD in ($conti_transitori_imploded) THEN 'TRANSITORIO' ELSE 'RICAVI' END AS TIPO_CONTO
                     FROM FINANCE.GSL0PT S
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
                     LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
+                    LEFT JOIN THIP.ARTICOLI AR2 on AR2.ID_AZIENDA = S.T01CD and AR2.ID_ARTICOLO = S.GPS3CD
                     LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
                     WHERE GT01CD = 'BASE'
                         and T01CD = '001'
@@ -355,6 +357,82 @@ class PantheraManager {
 
     function preparaGiroconto($codCommessa) {
         print_error(500, 'Funzione non implementata');
+        
+        $conti_transitori_imploded = "'" . implode("','", array_keys($matrice_conti)) .  "'";
+        $decode_conto = 'CASE ';
+        foreach ($matrice_conti as $t => $r) {
+            $decode_conto .= "WHEN S.GPV0CD='$t' THEN '$r' ";
+        }
+        $decode_conto .= "ELSE '' END";
+
+        $query1 = "INSERT INTO THIP.FUCKING_CM_TABLE(
+                        COD_CONTO,COD_COMMESSA,COD_DIVISIONE,COD_CLIENTE,COD_ARTICOLO,COD_ARTICOLO_RIF,CENTRO_COSTO
+                        DARE,AVERE)
+                SELECT
+                        RTRIM(S.GPV0CD) as COD_CONTO,
+                        RTRIM(S.GPD0CD) as COD_COMMESSA,
+                        --RTRIM(CD.DESCRIZIONE) as DES_COMMESSA,
+                        RTRIM(S.T36CD) as COD_DIVISIONE,
+                        CASE WHEN CLICD !='' THEN RTRIM(CLICD) ELSE RTRIM(GPS4CD) END as COD_CLIENTE,
+                        --RTRIM(CLI.RAGIONE_SOCIALE) as CLI_RA_SOC,
+                        RTRIM(S.GPS2CD) as COD_ARTICOLO,
+                        --RTRIM(AR.DESCR_ESTESA) as DES_ARTICOLO,
+                        RTRIM(S.GPS3CD) as COD_ARTICOLO_RIF,
+                        --RTRIM(AR2.DESCR_ESTESA) as DES_ARTICOLO_RIF,
+                        RTRIM(GPC0CD) as CENTRO_COSTO,
+                        GSL0AUCA-GSL0DUCA as DARE,
+                        0 as AVERE
+                    FROM FINANCE.GSL0PT S
+                    JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
+                    JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
+                    LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
+                    LEFT JOIN THIP.ARTICOLI AR2 on AR2.ID_AZIENDA = S.T01CD and AR2.ID_ARTICOLO = S.GPS3CD
+                    LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
+                    WHERE GT01CD = 'BASE'
+                        and T01CD = '001'
+                        and GT02CD = 'CONS'
+                        and GSL0TPSL = 1
+                        and GS02CD = '*****'
+                        --and DATEPART(yy, GAT0CD) = 2022
+                        and GPV0CD not like 'ZZ%'
+                        --and GPC0CD = 'CR001'
+                        --and not (GSL0DUCA = 0 and GSL0AUCA = 0)
+                        and S.GPD0CD = '$codCommessa'
+                        and S.GPV0CD in ($conti_transitori_imploded)
+                UNION
+                SELECT
+                        $decode_conto as COD_CONTO,
+                        RTRIM(S.GPD0CD) as COD_COMMESSA,
+                        --RTRIM(CD.DESCRIZIONE) as DES_COMMESSA,
+                        RTRIM(S.T36CD) as COD_DIVISIONE,
+                        CASE WHEN CLICD !='' THEN RTRIM(CLICD) ELSE RTRIM(GPS4CD) END as COD_CLIENTE,
+                        --RTRIM(CLI.RAGIONE_SOCIALE) as CLI_RA_SOC,
+                        RTRIM(S.GPS2CD) as COD_ARTICOLO,
+                        --RTRIM(AR.DESCR_ESTESA) as DES_ARTICOLO,
+                        RTRIM(S.GPS3CD) as COD_ARTICOLO_RIF,
+                        --RTRIM(AR2.DESCR_ESTESA) as DES_ARTICOLO_RIF,
+                        RTRIM(GPC0CD) as CENTRO_COSTO,
+                        0 as DARE,
+                        GSL0AUCA-GSL0DUCA as AVERE
+                    FROM FINANCE.GSL0PT S
+                    JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
+                    JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
+                    LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
+                    LEFT JOIN THIP.ARTICOLI AR2 on AR2.ID_AZIENDA = S.T01CD and AR2.ID_ARTICOLO = S.GPS3CD
+                    LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
+                    WHERE GT01CD = 'BASE'
+                        and T01CD = '001'
+                        and GT02CD = 'CONS'
+                        and GSL0TPSL = 1
+                        and GS02CD = '*****'
+                        --and DATEPART(yy, GAT0CD) = 2022
+                        and GPV0CD not like 'ZZ%'
+                        --and GPC0CD = 'CR001'
+                        --and not (GSL0DUCA = 0 and GSL0AUCA = 0)
+                        and S.GPD0CD = '$codCommessa'
+                        and S.GPV0CD in ($conti_transitori_imploded)
+                ";
+        execute_update($query1);
     }
     
 }
