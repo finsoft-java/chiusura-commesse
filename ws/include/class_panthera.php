@@ -365,23 +365,60 @@ class PantheraManager {
         }
         $decode_conto .= "ELSE '' END";
 
-        $query1 = "INSERT INTO THIP.FUCKING_CM_TABLE(
-                        COD_CONTO,COD_COMMESSA,COD_DIVISIONE,COD_CLIENTE,COD_ARTICOLO,COD_ARTICOLO_RIF,CENTRO_COSTO
-                        DARE,AVERE)
-                SELECT
-                        RTRIM(S.GPV0CD) as COD_CONTO,
-                        RTRIM(S.GPD0CD) as COD_COMMESSA,
-                        --RTRIM(CD.DESCRIZIONE) as DES_COMMESSA,
-                        RTRIM(S.T36CD) as COD_DIVISIONE,
-                        CASE WHEN CLICD !='' THEN RTRIM(CLICD) ELSE RTRIM(GPS4CD) END as COD_CLIENTE,
-                        --RTRIM(CLI.RAGIONE_SOCIALE) as CLI_RA_SOC,
-                        RTRIM(S.GPS2CD) as COD_ARTICOLO,
-                        --RTRIM(AR.DESCR_ESTESA) as DES_ARTICOLO,
-                        RTRIM(S.GPS3CD) as COD_ARTICOLO_RIF,
-                        --RTRIM(AR2.DESCR_ESTESA) as DES_ARTICOLO_RIF,
-                        RTRIM(GPC0CD) as CENTRO_COSTO,
-                        GSL0AUCA-GSL0DUCA as DARE,
-                        0 as AVERE
+        $query1 = "INSERT INTO FINANCE.BETRAPT(
+                        T01CD,
+                        TRANUREG,
+                        TRANRIRE,
+                        TRASTATO,
+                        T09CD,
+                        TRACPESE,
+                        TRATPRIM,
+                        T02CD,
+                        TRADSCAU,
+                        TRADSAGG,
+                        VOCCD,
+                        TRADTRCO,
+                        TRADTOPE,
+                        TRADTIVA,
+                        TRADTDOC,
+                        TRADTVAL,
+                        TRADTSPA,
+                        TRAAAPAR,
+                        TRANRPAR,
+                        TRANPIVA,
+                        TRATPVAL,
+                        MOVNAPAG,
+                        TRATPPAG,
+                        TRASEGNO,
+                        TRAIMPVP,
+                        TRAIIVVP,
+                        TRAIVAVP,
+                        MOVT62CD
+                        )
+                    SELECT
+                        S.T01CD as COD_AZIENDA,
+                        ??? as NUM_REG,
+                        ??? as NUM_RIGA,
+                        '1' as STATO,
+                        ??? as NUMERATORE, -- '*' = nessuno
+                        '1' as TRACPESE,
+                        '3' as TRATPRIM,
+                        '???' as CAUSALE_CONTABILE,
+                        '???' as TRADSCAU,
+                        ??? as TRADSAGG,
+                        S.GPV0CD as COD_CONTO,
+                        ??? as DATA_REG,
+                        ??? as DATA_OPERAZ,
+                        '0001-01-01' as DATA_IVA,
+                        ??? as DATA_DOC,
+                        TRADTVAL,
+                        TRADTSPA,
+                        TRAAAPAR,
+                        TRANRPAR
+                        '0'as TRANPIVA
+                        '1' as TRATPVAL
+                        MOVNAPAG
+                        TRATPPAG
                     FROM FINANCE.GSL0PT S
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
@@ -393,46 +430,246 @@ class PantheraManager {
                         and GT02CD = 'CONS'
                         and GSL0TPSL = 1
                         and GS02CD = '*****'
-                        --and DATEPART(yy, GAT0CD) = 2022
                         and GPV0CD not like 'ZZ%'
                         --and GPC0CD = 'CR001'
-                        --and not (GSL0DUCA = 0 and GSL0AUCA = 0)
+                        and GSL0DUCA <> GSL0AUCA)
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                UNION
-                SELECT
-                        $decode_conto as COD_CONTO,
-                        RTRIM(S.GPD0CD) as COD_COMMESSA,
-                        --RTRIM(CD.DESCRIZIONE) as DES_COMMESSA,
-                        RTRIM(S.T36CD) as COD_DIVISIONE,
-                        CASE WHEN CLICD !='' THEN RTRIM(CLICD) ELSE RTRIM(GPS4CD) END as COD_CLIENTE,
-                        --RTRIM(CLI.RAGIONE_SOCIALE) as CLI_RA_SOC,
-                        RTRIM(S.GPS2CD) as COD_ARTICOLO,
-                        --RTRIM(AR.DESCR_ESTESA) as DES_ARTICOLO,
-                        RTRIM(S.GPS3CD) as COD_ARTICOLO_RIF,
-                        --RTRIM(AR2.DESCR_ESTESA) as DES_ARTICOLO_RIF,
-                        RTRIM(GPC0CD) as CENTRO_COSTO,
-                        0 as DARE,
-                        GSL0AUCA-GSL0DUCA as AVERE
-                    FROM FINANCE.GSL0PT S
-                    JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
-                    JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
-                    LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
-                    LEFT JOIN THIP.ARTICOLI AR2 on AR2.ID_AZIENDA = S.T01CD and AR2.ID_ARTICOLO = S.GPS3CD
-                    LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
-                    WHERE GT01CD = 'BASE'
-                        and T01CD = '001'
-                        and GT02CD = 'CONS'
-                        and GSL0TPSL = 1
-                        and GS02CD = '*****'
-                        --and DATEPART(yy, GAT0CD) = 2022
-                        and GPV0CD not like 'ZZ%'
-                        --and GPC0CD = 'CR001'
-                        --and not (GSL0DUCA = 0 and GSL0AUCA = 0)
-                        and S.GPD0CD = '$codCommessa'
-                        and S.GPV0CD in ($conti_transitori_imploded)
+                    GROUP BY S.T01CD,S.GPV0CD,S.GPD0CD
+  --  UNION $decode_conto
                 ";
         execute_update($query1);
+
+        
+
+        $query2 = "INSERT INTO FINANCE.GIPNPT(
+                        GT01CD,
+                        DIZSTATO,
+                        DIZUTCRE,
+                        DIZDTCRE,
+                        DIZHHCRE,
+                        DIZUTAGG,
+                        DIZDTAGG,
+                        DIZHHAGG,
+                        GIPNNATR,
+                        GT05CD,
+                        GT14CD,
+                        T01CD,
+                        GIPNDTRE,
+                        GIPNDTCM,
+                        GT02CD,
+                        GT03CD,
+                        GEV0CD,
+                        GC28CD,
+                        GT11CD,
+                        GIPNRFOR,
+                        GIPNDTOR,
+                        GIPNRIFE,
+                        GIPNDTDC,
+                        GIPNRFAB,
+                        GIPNDTAB,
+                        GIPNDTIC,
+                        GIPNDTFC,
+                        GIPNAZCO,
+                        VOCCD,
+                        CLICD,
+                        FORCD,
+                        GIPNRFL1,
+                        GIPNRFL2,
+                        GIPNRFL3,
+                        GIPNDTL1,
+                        GIPNDTL2,
+                        GIPNDTL3,
+                        T36CD,
+                        GPV0CD,
+                        GPC0CD,
+                        GPD0CD,
+                        GPS1CD,
+                        GPS2CD,
+                        GPS3CD,
+                        GPS4CD,
+                        GPS5CD,
+                        GIPNDIV1,
+                        VOCCPQ,
+                        CENCPQ,
+                        COMCPQ,
+                        SEG1CPQ,
+                        SEG2CPQ,
+                        SEG3CPQ,
+                        SEG4CPQ,
+                        SEG5CPQ,
+                        GIPNDSNO,
+                        GIPNIUCA,
+                        GIPNIUCG,
+                        GIPNIUCT,
+                        GIPNQUNT,
+                        GIPNSECO,
+                        GT18CD,
+                        GIPNDCAT,
+                        GT12CD,
+                        GIPNCMBT,
+                        GIPNDCAG,
+                        GIPNCAGR,
+                        GIPNCAMB,
+                        GT04CD,
+                        GT15CD,
+                        GIPNUNIT,
+                        GIPNSER1,
+                        GIPNSER2,
+                        GIPNSER3,
+                        GIPNFLG1,
+                        GIPNFLG2,
+                        GIPNFLG3,
+                        GIPNIMS1,
+                        GIPNIMS2,
+                        GIPNIMS3,
+                        GIPNIMS4,
+                        GIPNIMS5,
+                        GIPNQSR1,
+                        GIPNQSR2,
+                        GIPNUNM1,
+                        GIPNUNM2,
+                        GIPNUNI1,
+                        GIPNUNI2,
+                        GIPNUNI3,
+                        GIPNUNI4,
+                        GIPNUNI5,
+                        GIPNNAOR,
+                        GIPNPROR,
+                        GIPNA256,
+                        GIPNSEPA,
+                        GIPNTIOR,
+                        GIPNTPIN,
+                        GIPNTPPE,
+                        GIPNNLOG,
+                        T97CD,
+                        GIPNDTEL,
+                        GIPNCHC1,
+                        GIPNCHC2)
+                    SELECT
+                        'BASE' as DATASET,
+                        '1' as STATO,
+                        'ADMIN' as UTENTE_CRZ,
+                        CURRENT_DATE as DATA_CRZ,
+                        CURRENT_TIME as ORA_CRZ,
+                        'ADMIN' as UTENTE_AGG,
+                        CURRENT_DATE as DATA_AGG,
+                        CURRENT_TIME as ORA_AGG,
+                        ??? as PROGRESSIVO,         -- GIPNPT ha un progressivo “univoco” (GIPNNATR) che va gestito riprendendolo e incrementandolo dal file GIPNNPT 
+                        ??? as ORIGINE,
+                        ??? as NUMERATORE,
+                        ??? as TIPO_NUMERATORE,
+                        S.T01CD as COD_AZIENDA,
+                        ??? as DATA_REG,
+                        ??? as DATA_COMPETENZA,
+                        'CONS' as SUBSET,
+                        '' as VERSIONE,
+                        ??? as EVENTO,
+                        '' as ALIAS,
+                        ??? as CAUSALE,
+                        '0001-01-01' as DATA_REG_ORIGINE,
+                        '' as NUMERO_DOC,
+                        '0001-01-01' as DATA_DOC,
+                        '' as ABBINAMENTO,
+                        '0001-01-01' as DATA_ABBINAMENTO,
+                        '0001-01-01' as DATA_INIZIO_COMPETENZA,
+                        '0001-01-01' as DATA_FINE_COMPETENZA,
+                        S.T01CD as COD_AZIENDA_ORIGINE,
+                        S.GPV0CD as VOCE_CONTABILE,
+                        CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END as COD_CLIENTE,
+                        '' as COD_FORNITORE,
+                        '' as RIF_LIB1,
+                        '' as RIF_LIB2,
+                        '' as RIF_LIB3,
+                        '0001-01-01' as DATA_LIB1,
+                        '0001-01-01' as DATA_LIB2,
+                        '0001-01-01' as DATA_LIB3,
+                        S.T36CD as COD_DIVISIONE,
+                        S.GPV0CD as VOCE_GESTIONALE,
+                        S.GPC0CD as CENTRO_COSTO,
+                        S.GPD0CD as COD_COMMESSA,
+                        '' as SEGM1,
+                        '' as SEGM2,
+                        '' as SEGM3,
+                        '' as SEGM4,
+                        '' as SEGM5,
+                        S.T36CD as COD_DIVISIONE_PQ,
+                        S.GPV0CD as VOCE_CONTABILE_PQ,
+                        S.GPC0CD as CENTRO_COSTO_PQ,
+                        S.GPD0CD as COD_COMMESSA_PQ,
+                        '' as SEGM1_PQ,
+                        '' as SEGM2_PQ,
+                        '' as SEGM3_PQ,
+                        '' as SEGM4_PQ,
+                        '' as SEGM5_PQ,
+                        '' as GIPN_DESCRIZIONE,
+                        GSL0AUCA-GSL0DUCA as IMPORTO_VAL_AZ,
+                        GSL0AUCA-GSL0DUCA as IMPORTO_VAL_GRP,
+                        GSL0AUCA-GSL0DUCA as IMPORTO_VAL_TRANSAZ,
+                        0 as QTY,
+                        '1' as SEGNO,   -- Impostare uguale a segno di BETRAPT
+                        '' as VALUTA,
+                        '0001-01-01' as DATA_CAMBIO_TRANSAZ,
+                        '' as TIPO_CAMBIO_TRANSAZ,
+                        1 as CAMBIO_TRANSAZ,
+                        '0001-01-01' as DATA_CAMBIO_GRP,
+                        '' as TIPO_CAMBIO_GRP,
+                        0 as CAMBIO_GRP,
+                        '' as UNITA_MISURA,
+                        '' as TIPO_UNITARIO,
+                        0 as UNITARITO,
+                        '' as CAMPO_SERV1,
+                        '' as CAMPO_SERV2,
+                        '' as CAMPO_SERV3,
+                        '' as FLAG_SERV1,
+                        '' as FLAG_SERV2,
+                        '' as FLAG_SERV3,
+                        0 as IMP_SERV1,
+                        0 as IMP_SERV2,
+                        0 as IMP_SERV3,
+                        0 as IMP_SERV4,
+                        0 as IMP_SERV5,
+                        0 as QTY_SERV1,
+                        0 as QTY_SERV2,
+                        '' as UNITA_MIS_SERV1,
+                        '' as UNITA_MIS_SERV2,
+                        0 as UNITARIO_SERV1,
+                        0 as UNITARIO_SERV2,
+                        0 as UNITARIO_SERV3,
+                        0 as UNITARIO_SERV4,
+                        0 as UNITARIO_SERV5,
+                        NUM_REG, -- come quello di BETRAPT ???
+                        NUM_RIGA, -- come quello di BETRAPT ???
+                        '' as CHIAVE_ORIGINE,
+                        '' as SEPARATORE,
+                        '' as TIPO_ORIGINE,
+                        '' as TIPO_INSERIMENTO,
+                        '' as TIPO_PERIODO,
+                        0 as PROGR_ELAB,
+                        '' as OGGETTO_APPLICATIVO,
+                        '0001-01-01' as DATA_ELAB,
+                        '' as CHECK_ELABORATO,
+                        '' as CHECK_DA_ELIMINARE
+                        -- DOVE IMPOSTARE ARTICOLO E ARTICOLO RIF ?
+                    FROM FINANCE.GSL0PT S
+                    JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
+                    JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
+                    LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
+                    LEFT JOIN THIP.ARTICOLI AR2 on AR2.ID_AZIENDA = S.T01CD and AR2.ID_ARTICOLO = S.GPS3CD
+                    LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
+                    WHERE GT01CD = 'BASE'
+                        and T01CD = '001'
+                        and GT02CD = 'CONS'
+                        and GSL0TPSL = 1
+                        and GS02CD = '*****'
+                        and GPV0CD not like 'ZZ%'
+                        --and GPC0CD = 'CR001'
+                        and (GSL0DUCA <> GSL0AUCA)
+                        and S.GPD0CD = '$codCommessa'
+                        and S.GPV0CD in ($conti_transitori_imploded)
+  -- UNION $decode_conto
+                ";
+            execute_update($query2);
     }
     
 }
