@@ -1,8 +1,10 @@
 export interface VistaAnalisiCommessa {
   COD_CONTO: string;
+  DES_CONTO: string;
   COD_COMMESSA: string;
   DES_COMMESSA: string;
   COD_DIVISIONE: string;
+  DES_DIVISIONE: string;
   COD_CLIENTE: string;
   CLI_RA_SOC: string;
   COD_ARTICOLO: string;
@@ -16,4 +18,5 @@ export interface VistaAnalisiCommessa {
   ESERCIZIO: number;
   TIPO_CONTO: 'TRANSITORIO' | 'RICAVI' | null;
   CONTO_RICAVI: string | null;
+  DES_CONTO_RICAVI: string | null;
 }

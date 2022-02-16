@@ -222,11 +222,11 @@ class PantheraManager {
                         and GT02CD = 'CONS'
                         and GSL0TPSL = 1
                         and GS02CD = '*****'
-                        and GPV0CD not like 'ZZ%'
-                        and DATEPART(yy, GAT0CD) = 2022
+                        and DATEPART(yy, GAT0CD) > 2020     -- paracadute
+                        and GPV0CD not like 'ZZ%'           -- contropartita
                         and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
                         and ('$codCommessa'='' or S.GPD0CD='$codCommessa')
-                        -- and WF_NODE_ID='$statoIniziale'
+                        -- and CD.WF_NODE_ID='$statoIniziale'
                     GROUP BY
                         S.GPV0CD,S.GPD0CD,S.T36CD,S.GPC0CD,S.GSL0AUCA,S.GSL0DUCA,
                         CD.DESCRIZIONE,
@@ -324,10 +324,10 @@ class PantheraManager {
                         and GT02CD = 'CONS'
                         and GSL0TPSL = 1
                         and GS02CD = '*****'
-                        --and DATEPART(yy, GAT0CD) = 2022
-                        and GPV0CD not like 'ZZ%'
-                        --and GPC0CD = 'CR001'
-                        --and not (GSL0DUCA = 0 and GSL0AUCA = 0)
+                        and DATEPART(yy, GAT0CD) > 2020     -- paracadute
+                        and GPV0CD not like 'ZZ%'           -- contropartita
+                        and GPC0CD = 'CR001'
+                        and not (GSL0DUCA = 0 and GSL0AUCA = 0)
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
                     ORDER BY COD_CONTO";
@@ -348,9 +348,36 @@ class PantheraManager {
     }
     
     function avanzamentoWorkflow($codCommessa) {
+        global $logged_user;
         if (!$this->mock) {
+            $statoIniziale = STATO_WF_START;
             $statoFinale = STATO_WF_END;
-            $sql = "UPDATE THIP.COMMESSE SET STATO_WF=$statoFinale WHERE COD_COMMESSA='$codCommessa' ";
+
+            $sql = "UPDATE THIP.COMMESSE SET STATO_WF='$statoFinale' WHERE ID_COMMESSA='$codCommessa' ";
+            executeUpdate($sql);
+            
+            sqlsrv_begin_transaction($this->conn);
+            $sql = "UPDATE THERA.NUMERATOR SET LAST_NUMBER=LAST_NUMBER+1 WHERE ID_NUMERATOR='WF_LOG'";
+            $sql = "SELECT MAX(LAST_NUMBER) FROM THERA.NUMERATOR WHERE ID_NUMERATOR='WF_LOG'";
+            $id = select_single_value($sql);
+            sqlsrv_commit($panthera->conn);
+
+            $sql = "INSERT INTO THERA.WF_LOG(
+                        ID,
+                        WF_CLASS_ID,WF_ID,
+                        INITIAL_NODE,INITIAL_SUB_NODE,
+                        FINAL_NODE,FINAL_SUB_NODE,
+                        OBJECT_KEY,
+                        USER_ID,
+                        USER_NOTE)
+                    VALUES (
+                        $id,
+                        51,'COM_WF',
+                        '$statoIniziale','-',
+                        '$statoFinale','-',
+                        '001'||chr(22)||'$codCommessa',
+                        '$logged_user[nome_utente]_001',
+                        'Avanzamento via piattaforma Ricavi Commesse') ";
             executeUpdate($sql);
         }
     }
@@ -564,7 +591,7 @@ class PantheraManager {
                         ??? as DATA_COMPETENZA,
                         'CONS' as SUBSET,
                         '' as VERSIONE,
-                        ??? as EVENTO,
+                        'COGE_E' as EVENTO,
                         '' as ALIAS,
                         ??? as CAUSALE,
                         '0001-01-01' as DATA_REG_ORIGINE,

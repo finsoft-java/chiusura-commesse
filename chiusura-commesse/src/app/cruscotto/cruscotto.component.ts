@@ -52,8 +52,13 @@ export class CruscottoComponent implements OnInit {
 
   validazione(x: VistaCruscotto) {
     console.log(x);
-    if (x.CONTO_TRANSITORIO === null || x.CONTO_TRANSITORIO === '' || x.CONTO_TRANSITORIO.includes(';')
-        || x.CONTO_RICAVI === undefined || x.CONTO_RICAVI === null || x.CONTO_RICAVI === '' || x.CONTO_RICAVI.includes(';')) {
+    x.TOT_FATTURATO = x.TOT_FATTURATO || 0.0;
+    x.SALDO_CONTO_RICAVI = x.SALDO_CONTO_RICAVI || 0.0;
+    x.SALDO_CONTO_TRANSITORIO = x.SALDO_CONTO_TRANSITORIO || 0.0;
+    x.CONTO_TRANSITORIO = x.CONTO_TRANSITORIO || '';
+    x.CONTO_RICAVI = x.CONTO_RICAVI || '';
+
+    if (x.CONTO_TRANSITORIO.includes(';') || x.CONTO_RICAVI === '' || x.CONTO_RICAVI.includes(';')) {
       x.TIPO = 5; // c'è qualche problema (conti non ben determinati), l'utente deve correggere in Panthera
     } else if (x.TOT_FATTURATO !== (x.SALDO_CONTO_RICAVI + x.SALDO_CONTO_TRANSITORIO)) {
       x.TIPO = 4; // c'è qualche problema (squadratura), l'utente deve correggere in Panthera

@@ -9,4 +9,5 @@ export interface RigaContoAnalitica extends RigaConto {
   DES_ARTICOLO_RIF: string;
   CENTRO_COSTO: string;
   COD_DIVISIONE: string;
+  DES_DIVISIONE: string;
 }

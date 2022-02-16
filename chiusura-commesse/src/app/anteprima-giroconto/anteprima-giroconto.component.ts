@@ -47,11 +47,13 @@ export class AnteprimaGirocontoComponent implements OnInit {
     const data: RigaConto[] = [];
     data.push({
       CONTO: x.CONTO_RICAVI,
+      DES_CONTO: x.DES_CONTO_RICAVI,
       VERSO: 'AVERE',
       IMPORTO: x.SALDO_CONTO_TRANSITORIO
     });
     data.push({
       CONTO: x.CONTO_TRANSITORIO,
+      DES_CONTO: x.DES_CONTO_TRANSITORIO,
       VERSO: 'DARE',
       IMPORTO: x.SALDO_CONTO_TRANSITORIO
     });
@@ -67,6 +69,7 @@ export class AnteprimaGirocontoComponent implements OnInit {
       if (x.TIPO_CONTO === 'TRANSITORIO' && x.CONTO_RICAVI) {
         const r: RigaContoAnalitica = {
           CONTO: x.COD_CONTO,
+          DES_CONTO: x.DES_CONTO,
           VERSO: 'AVERE',
           IMPORTO: x.SALDO,
           COD_CLIENTE: x.COD_CLIENTE,
@@ -76,11 +79,13 @@ export class AnteprimaGirocontoComponent implements OnInit {
           COD_ARTICOLO_RIF: x.COD_ARTICOLO_RIF,
           DES_ARTICOLO_RIF: x.DES_ARTICOLO_RIF,
           CENTRO_COSTO: x.CENTRO_COSTO,
-          COD_DIVISIONE: x.COD_DIVISIONE
+          COD_DIVISIONE: x.COD_DIVISIONE,
+          DES_DIVISIONE: x.DES_DIVISIONE
         };
         data.push(r);
         const r2: RigaContoAnalitica = {
           CONTO: x.CONTO_RICAVI,
+          DES_CONTO: x.DES_CONTO_RICAVI || '',
           VERSO: 'DARE',
           IMPORTO: x.SALDO,
           COD_CLIENTE: x.COD_CLIENTE,
@@ -90,7 +95,8 @@ export class AnteprimaGirocontoComponent implements OnInit {
           COD_ARTICOLO_RIF: x.COD_ARTICOLO_RIF,
           DES_ARTICOLO_RIF: x.DES_ARTICOLO_RIF,
           CENTRO_COSTO: x.CENTRO_COSTO,
-          COD_DIVISIONE: x.COD_DIVISIONE
+          COD_DIVISIONE: x.COD_DIVISIONE,
+          DES_DIVISIONE: x.DES_DIVISIONE
         };
         data.push(r2);
       } else if (!x.CONTO_RICAVI) {
