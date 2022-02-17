@@ -357,8 +357,8 @@ class PantheraManager {
             executeUpdate($sql);
             
             sqlsrv_begin_transaction($this->conn);
-            $sql = "UPDATE THERA.NUMERATOR SET LAST_NUMBER=LAST_NUMBER+1 WHERE ID_NUMERATOR='WF_LOG'";
-            $sql = "SELECT MAX(LAST_NUMBER) FROM THERA.NUMERATOR WHERE ID_NUMERATOR='WF_LOG'";
+            $sql = "UPDATE THERA.NUMERATOR SET LAST_NUMBER=LAST_NUMBER+1 WHERE NUMERATOR_ID='WF_LOG'";
+            $sql = "SELECT LAST_NUMBER FROM THERA.NUMERATOR WHERE NUMERATOR_ID='WF_LOG'";
             $id = select_single_value($sql);
             sqlsrv_commit($panthera->conn);
 
