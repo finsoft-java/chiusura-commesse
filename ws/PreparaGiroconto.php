@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($codCommessa == null) {
         print_error(400, "Missing codCommessa");
     }
-    [$list, $count] = $panthera->preparaGiroconto($codCommessa);
+    [$list, $count] = $saldiManager->preparaGiroconto($codCommessa);
     
 } else {
     //==========================================================

@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if ($codCommessa == null) {
         print_error(400, "Missing codCommessa");
     }
-    [$list, $count] = $panthera->getVistaAnalisiCommessa($codCommessa);
+    [$list, $count] = $saldiManager->getVistaAnalisiCommessa($codCommessa);
         
     header('Content-Type: application/json');
     echo json_encode(['data' => $list, 'count' => $count]);
