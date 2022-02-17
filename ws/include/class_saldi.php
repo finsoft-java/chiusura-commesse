@@ -220,7 +220,7 @@ class SaldiManager {
             $utente = $logged_user->nome_utente . '_' . $idAzienda;
             $sql = "INSERT INTO THERA.WF_LOG(
                         ID,
-                        WF_CLASS_ID,WF_ID,
+                        WF_CLASS_ID,WF_ID,WF_ARC_ID,
                         INITIAL_NODE,INITIAL_SUB_NODE,
                         FINAL_NODE,FINAL_SUB_NODE,
                         OBJECT_KEY,
@@ -228,7 +228,7 @@ class SaldiManager {
                         USER_NOTE)
                     VALUES (
                         $id,
-                        51,'COM_WF',
+                        51,'COM_WF','-',
                         '$statoIniziale','-',
                         '$statoFinale','-',
                         '$idAzienda'+CHAR(22)+'$codCommessa',
