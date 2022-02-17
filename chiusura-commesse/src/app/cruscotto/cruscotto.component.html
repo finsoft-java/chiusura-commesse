@@ -48,15 +48,13 @@ In questa schermata vengono presentate tutte le commesse in stato workflow "Inst
         <th mat-header-cell *matHeaderCellDef> Azioni </th>
         <td mat-cell *matCellDef="let element">
             <button mat-raised-button color="primary" (click)="analisi(element)">Analisi</button><br/>
-            <button *ngIf="utentePrivilegiato" mat-raised-button color="warn"
+            <button *ngIf="utentePrivilegiato && element.TIPO==1" mat-raised-button color="warn"
                 (click)="avanzamentoWorkflow(element)"
-                [disabled]="element.TIPO!==1"
-                [title]="(element.TIPO>=4) ? 'Prima occorre risolvere le anomalie in Panthera': element.TIPO==1 ? '' : 'Prima occorre eseguire il giroconto'"
-                >Avanzamento WF</button><br/>
-            <button *ngIf="utentePrivilegiato" mat-raised-button color="warn"
+                >Avanzamento WF</button>
+            <button *ngIf="utentePrivilegiato && element.TIPO!==1" mat-raised-button color="warn"
                 (click)="giroconto(element)"
-                [disabled]="element.TIPO!==2 && element.TIPO!==3"
-                [title]="element.TIPO>=4 ? 'Prima occorre risolvere le anomalie in Panthera': element.TIPO==1 ? 'Giroconto non necessario' : ''"
+                [disabled]="element.TIPO>=4"
+                [title]="element.TIPO>=4 ? 'Prima occorre risolvere le anomalie in Panthera': ''"
                 >Giroconto</button>
         </td>
     </ng-container>

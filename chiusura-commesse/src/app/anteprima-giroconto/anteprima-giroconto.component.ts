@@ -110,7 +110,7 @@ export class AnteprimaGirocontoComponent implements OnInit {
   giroconto() {
     if (confirm('Verrà emesso il giroconto. Procedere?')) {
       this.azioniSvc.preparaGiroconto(this.codCommessa).subscribe(response => {
-        this.router.navigate(['cruscotto', this.codCommessa]);
+        this.alertService.success('Tabelle CM popolate correttamente. Procedere con il CM in Panthera.');
       },
       error => {
         this.alertService.error(error);

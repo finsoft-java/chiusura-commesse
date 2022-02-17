@@ -79,6 +79,7 @@ export class CruscottoComponent implements OnInit {
     if (confirm('Il workflow verrà avanzato in stato "A Ricavo". Procedere?')) {
       this.azioniSvc.avanzamentoWorkflow(row.COD_COMMESSA).subscribe(response => {
         this.getAll();
+        this.alertService.success('Stato workflow modificato correttamente.');
       },
       error => {
         this.alertService.error(error);
