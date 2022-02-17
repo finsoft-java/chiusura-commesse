@@ -32,7 +32,7 @@ class SaldiManager {
                         RTRIM(S.GPD0CD) as COD_COMMESSA,
                         RTRIM(CD.DESCRIZIONE) as DES_COMMESSA,
                         RTRIM(S.T36CD) as COD_DIVISIONE,
-                        --RTRIM(D.DESCRIZIONE) as DES_DIVISIONE,
+                        RTRIM(D.T36DSNOR) as DES_DIVISIONE,
                         CASE WHEN RTRIM(S.CLICD) !='' THEN RTRIM(S.CLICD) ELSE RTRIM(S.GPS4CD) END as COD_CLIENTE,
                         RTRIM(CLI.RAGIONE_SOCIALE) as CLI_RA_SOC,
                         SUM(S.GSL0AUCA-S.GSL0DUCA) as SALDO,
@@ -43,7 +43,7 @@ class SaldiManager {
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
                     LEFT JOIN FINANCE.BBVOCPT VOC on VOC.T01CD = S.T01CD and VOC.VOCCD = S.GPV0CD
-                    -- LEFT JOIN THIP.DIVISIONI D on D.ID_AZIENDA = S.T01CD and D.ID_DIVISIONE = S.T36CD
+                    LEFT JOIN FINANCE.BBT36PT D on D.T01CD = S.T01CD and D.T36CD = S.T36CD
                     LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
                     LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
                     LEFT JOIN (
@@ -67,6 +67,7 @@ class SaldiManager {
                         S.GPV0CD,S.GPD0CD,S.T36CD,S.GPC0CD,S.GSL0AUCA,S.GSL0DUCA,
                         VOC.VOCDSNOR,
                         CD.DESCRIZIONE,
+                        D.T36DSNOR,
                         CASE WHEN RTRIM(CLICD) !='' THEN RTRIM(CLICD) ELSE RTRIM(GPS4CD) END,
                         CLI.RAGIONE_SOCIALE,
                         FAT.TOT_FATTURATO
@@ -148,7 +149,7 @@ class SaldiManager {
                         RTRIM(S.GPD0CD) as COD_COMMESSA,
                         RTRIM(CD.DESCRIZIONE) as DES_COMMESSA,
                         RTRIM(S.T36CD) as COD_DIVISIONE,
-                        --RTRIM(D.DESCRIZIONE) as DES_DIVISIONE,
+                        RTRIM(D.T36DSNOR) as DES_DIVISIONE,
                         CASE WHEN CLICD !='' THEN RTRIM(CLICD) ELSE RTRIM(GPS4CD) END as COD_CLIENTE,
                         RTRIM(CLI.RAGIONE_SOCIALE) as CLI_RA_SOC,
                         RTRIM(S.GPS2CD) as COD_ARTICOLO,
@@ -164,7 +165,7 @@ class SaldiManager {
                     FROM FINANCE.GSL0PT S
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
-                    -- LEFT JOIN THIP.DIVISIONI D on D.ID_AZIENDA = S.T01CD and D.ID_DIVISIONE = S.T36CD
+                    LEFT JOIN FINANCE.BBT36PT D on D.T01CD = S.T01CD and D.T36CD = S.T36CD
                     LEFT JOIN FINANCE.BBVOCPT VOC on VOC.T01CD = S.T01CD and VOC.VOCCD = S.GPV0CD
                     LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
                     LEFT JOIN THIP.ARTICOLI AR2 on AR2.ID_AZIENDA = S.T01CD and AR2.ID_ARTICOLO = S.GPS3CD
