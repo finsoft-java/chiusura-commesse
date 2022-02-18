@@ -64,7 +64,7 @@ class PantheraManager {
 
         if ($result = sqlsrv_query($this->conn, $sql)) {
             $arr = array();
-            while ($row = sqlsrv_fetch_array($result))
+            while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC))
             {
                 $arr[] = $row;
             }
@@ -80,7 +80,7 @@ class PantheraManager {
     function select_column($sql) {
         if ($result = sqlsrv_query($this->conn, $sql)) {
             $arr = array();
-            while ($row = sqlsrv_fetch_array($result))
+            while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC))
             {
                 $arr[] = $row[0];
             }
@@ -95,7 +95,7 @@ class PantheraManager {
     */
     function select_single($sql) {
         if ($result = sqlsrv_query($this->conn, $sql)) {
-            if ($row = sqlsrv_fetch_array($result))
+            if ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC))
             {
                 return $row;
             } else {
@@ -111,7 +111,7 @@ class PantheraManager {
     */
     function select_single_value($sql) {
         if ($result = sqlsrv_query($this->conn, $sql)) {
-            if ($row = sqlsrv_fetch_array($result))
+            if ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC))
             {
                 return $row[0];
             } else {
