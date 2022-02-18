@@ -111,7 +111,7 @@ class PantheraManager {
     */
     function select_single_value($sql) {
         if ($result = sqlsrv_query($this->conn, $sql)) {
-            if ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC))
+            if ($row = sqlsrv_fetch_array($result))
             {
                 return $row[0];
             } else {
