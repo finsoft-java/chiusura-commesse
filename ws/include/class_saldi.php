@@ -255,59 +255,68 @@ class SaldiManager {
         $decode_conto .= "ELSE '' END";
 
         $query1 = "INSERT INTO FINANCE.BETRAPT(
-                        T01CD,
-                        TRANUREG,
-                        TRANRIRE,
+                        T01CD,      -- azienda
+                        TRANUREG,   -- num.reg.
+                        TRANRIRE,   -- num.riga
+                        --TRANPRGT,   -- num progressivo (per imm. massa?)
+                        --WTRNRLOG,   -- nr. log (per imm. massa?)
                         TRASTATO,
-                        T09CD,
-                        TRACPESE,
-                        TRATPRIM,
-                        T02CD,
-                        TRADSCAU,
-                        TRADSAGG,
-                        VOCCD,
-                        TRADTRCO,
-                        TRADTOPE,
-                        TRADTIVA,
-                        TRADTDOC,
-                        TRADTVAL,
-                        TRADTSPA,
-                        TRAAAPAR,
-                        TRANRPAR,
-                        TRANPIVA,
-                        TRATPVAL,
-                        MOVNAPAG,
-                        TRATPPAG,
+                        T09CD,      -- numeratore
+                        TRACPESE,   -- esercizio
+                        TRATPRIM,   -- tipo riga imm.massa
+                        T02CD,      -- causale contabile
+                        TRADSCAU,   -- descr. causale contabile
+                        TRADSAGG,   -- descr. aggiuntiva
+                        VOCCD,      -- voce contabile
+                        TRADTRCO,   -- data reg.
+                        TRADTOPE,   -- data operazione
+                        TRADTIVA,   -- data comp. IVA
+                        TRADTDOC,   -- data doc.
+                        TRADTVAL,   -- data valuta
+                        TRADTSPA,   -- data scad. pagamento
+                        TRAAAPAR,   -- anno partita
+                        TRANRPAR,   -- nr. rif. partita
+                        TRANPIVA,   -- nr. protocollo IVA
+                        TRATPVAL,   -- tipo valuta
+                        --MOVNAPAG,   -- natura pagamento
+                        --TRACAMBVP -- cambio val. prim.     
+                        --TRACAMBVS -- cambio val. sec.
+                        --T05CD     -- assogg. IVA
+                        --T22CD     -- mod.pag.
+                        --TRATPPAG,   -- tipo pagamento
                         TRASEGNO,
-                        TRAIMPVP,
-                        TRAIIVVP,
-                        TRAIVAVP,
-                        MOVT62CD
+                        TRAIMPVP,   -- importo in val. prim.
+                        TRAIIVVP,   -- Imponibile IVA val primaria
+                        TRAIVAVP,   -- Imposta IVA val primaria
+                        MOVT62CD    -- Commessa_REF
                         )
                     SELECT
                         S.T01CD as COD_AZIENDA,
-                        ??? as NUM_REG,
-                        ??? as NUM_RIGA,
+                        0 as NUM_REG,
+                        ROW_NUMBER() OVER( ORDER BY S.T01CD ) as NUM_RIGA,
                         '1' as STATO,
-                        ??? as NUMERATORE, -- '*' = nessuno
-                        '1' as TRACPESE,
+                        'GEN' as NUMERATORE,
+                        DATEPART(yy, S.GAT0CD) as TRACPESE,
                         '3' as TRATPRIM,
-                        '???' as CAUSALE_CONTABILE,
-                        '???' as TRADSCAU,
-                        ??? as TRADSAGG,
+                        'GCR' as CAUSALE_CONTABILE,
+                        '' as TRADSCAU,
+                        '' as TRADSAGG,
                         S.GPV0CD as COD_CONTO,
-                        ??? as DATA_REG,
-                        ??? as DATA_OPERAZ,
+                        GETDATE() as DATA_REG,
+                        '0001-01-01' as DATA_OPERAZ,
                         '0001-01-01' as DATA_IVA,
-                        ??? as DATA_DOC,
-                        TRADTVAL,
-                        TRADTSPA,
-                        TRAAAPAR,
-                        TRANRPAR
+                        GETDATE() as DATA_DOC,
+                        '0001-01-01' as DATA_VALUTA,
+                        '0001-01-01' as DATA_SCAD_PAG,
+               ...         '' as ANNO_PARTITA,
+               ...         '' as NR_PARTITA,
                         '0'as TRANPIVA
                         '1' as TRATPVAL
-                        MOVNAPAG
-                        TRATPPAG
+               ...         '1' oppure '2' as TRASEGNO,
+                        (S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,   -- importo in val. prim.
+                        '0' as TRAIIVVP,   -- Imponibile IVA val primaria
+                        '0' as TRAIVAVP,   -- Imposta IVA val primaria
+                        S.GPD0CD as MOVT62CD
                     FROM FINANCE.GSL0PT S
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
