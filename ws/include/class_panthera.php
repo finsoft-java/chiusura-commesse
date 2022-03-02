@@ -9,9 +9,13 @@ class PantheraManager {
         $this->conn = null;
     }
     
+    /**
+     * Similar to mysql conn->escape_string()
+     * 
+     * There is no conn->escape_string() in sql server
+     * @see https://stackoverflow.com/questions/574805
+    */
     function escape_string($s) {
-        // there is no conn->escape_string() in sql server
-        // see https://stackoverflow.com/questions/574805
         if (!isset($s) or $s === null) return null;
         if (empty($s)) return $s;
         if (is_numeric($s)) return $s;
@@ -55,8 +59,8 @@ class PantheraManager {
         }
     }
 
-    /*
-    Esegue un comado SQL SELECT e lo ritorna come array di oggetti, oppure lancia un print_error
+    /**
+    * Esegue un comado SQL SELECT e lo ritorna come array di oggetti, oppure lancia un print_error
     */
     function select_list($sql) {
         
@@ -74,8 +78,8 @@ class PantheraManager {
         }
     }
 
-    /*
-    Esegue un comado SQL SELECT ritorna solo la prima colonna come array, oppure lancia un print_error
+    /**
+    * Esegue un comado SQL SELECT ritorna solo la prima colonna come array, oppure lancia un print_error
     */
     function select_column($sql) {
         if ($result = sqlsrv_query($this->conn, $sql)) {
@@ -90,8 +94,8 @@ class PantheraManager {
         }
     }
 
-    /*
-    Esegue un comado SQL SELECT e lo ritorna come singolo oggetto, oppure lancia un print_error
+    /**
+    * Esegue un comado SQL SELECT e lo ritorna come singolo oggetto, oppure lancia un print_error
     */
     function select_single($sql) {
         if ($result = sqlsrv_query($this->conn, $sql)) {
@@ -106,8 +110,8 @@ class PantheraManager {
         }
     }
 
-    /*
-    Esegue un comado SQL SELECT e si aspetta una singola cella come risultato, oppure lancia un print_error
+    /**
+    * Esegue un comado SQL SELECT e si aspetta una singola cella come risultato, oppure lancia un print_error
     */
     function select_single_value($sql) {
         if ($result = sqlsrv_query($this->conn, $sql)) {
@@ -122,8 +126,8 @@ class PantheraManager {
         }
     }
 
-    /*
-    Esegue un comado SQL UPDATE/INSERT/DELETE e se serve lancia un print_error
+    /**
+    * Esegue un comado SQL UPDATE/INSERT/DELETE e se serve lancia un print_error
     */
     function execute_update($sql) {
         $result = sqlsrv_query($this->conn, $sql);

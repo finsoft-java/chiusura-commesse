@@ -42,7 +42,7 @@ function require_logged_user_JWT() {
 /** 
  * Get header Authorization
  * @see https://stackoverflow.com/questions/40582161
- * */
+ */
 function getAuthorizationHeader(){
     $headers = null;
     if (isset($_SERVER['Authorization'])) {
@@ -65,7 +65,7 @@ function getAuthorizationHeader(){
 /**
  * Get access token from header
  * @see https://stackoverflow.com/questions/40582161
- * */
+ */
 function getBearerToken() {
     $headers = getAuthorizationHeader();
     if (!empty($headers)) {
@@ -83,8 +83,8 @@ function print_error($http_err_code, $msg) {
     die();
 }
 
-/*
-Esegue un comado SQL SELECT e lo ritorna come array di oggetti, oppure lancia un print_error
+/**
+* Esegue un comado SQL SELECT e lo ritorna come array di oggetti, oppure lancia un print_error
 */
 function select_list($sql, $connessione=null) {
     global $con;
@@ -106,8 +106,8 @@ function select_list($sql, $connessione=null) {
     }
 }
 
-/*
-Esegue un comado SQL SELECT ritorna solo la prima colonna come array, oppure lancia un print_error
+/**
+* Esegue un comado SQL SELECT ritorna solo la prima colonna come array, oppure lancia un print_error
 */
 function select_column($sql, $connessione=null) {
     global $con;
@@ -126,8 +126,8 @@ function select_column($sql, $connessione=null) {
     }
 }
 
-/*
-Esegue un comado SQL SELECT e lo ritorna come singolo oggetto, oppure lancia un print_error
+/**
+* Esegue un comado SQL SELECT e lo ritorna come singolo oggetto, oppure lancia un print_error
 */
 function select_single($sql, $connessione=null) {
     global $con;
@@ -146,8 +146,8 @@ function select_single($sql, $connessione=null) {
     }
 }
 
-/*
-Esegue un comado SQL SELECT e si aspetta una singola cella come risultato, oppure lancia un print_error
+/**
+* Esegue un comado SQL SELECT e si aspetta una singola cella come risultato, oppure lancia un print_error
 */
 function select_single_value($sql, $connessione=null) {
     global $con;
@@ -167,8 +167,8 @@ function select_single_value($sql, $connessione=null) {
 }
 
 
-/*
-Esegue un comado SQL UPDATE/INSERT/DELETE e se serve lancia un print_error
+/**
+* Esegue un comado SQL UPDATE/INSERT/DELETE e se serve lancia un print_error
 */
 function execute_update($sql, $connessione=null) {
     global $con;
