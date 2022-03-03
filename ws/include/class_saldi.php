@@ -1,12 +1,14 @@
 <?php
 
+error_reporting(E_STRICT); // così evitiamo di dimenticare le variabili globali
+
 $saldiManager = new SaldiManager();
 
 class SaldiManager {
     
 
     function getVistaCruscotto($codCommessa='') {
-        global $matrice_conti, $panthera;
+        global $matrice_conti, $panthera, $ID_AZIENDA, $DATASET, $SUBSET, $STATO_WF_START;
 
         if ($panthera->mock) {
             $objects = [ [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Implementazione su Linea a Banchi', 'COD_CLIENTE' => '006416','CLI_RA_SOC'=>'BREMBO SPA','COD_DIVISIONE' => 'AUT', 'TOT_FATTURATO' => 50000, 'SALDO_CONTO_TRANSITORIO' => 50000 , 'SALDO_CONTO_RICAVI' => 0.0, 'CONTO_TRANSITORIO' => '606004' ],
@@ -133,7 +135,7 @@ class SaldiManager {
     }
 
     function getVistaAnalisiCommessa($codCommessa) {
-        global $matrice_conti, $panthera;
+        global $matrice_conti, $panthera, $ID_AZIENDA, $DATASET, $SUBSET, $CENTRO_COSTO;
 
         if ($panthera->mock) {
             $objects = [ [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Fixture for seed attachment (n° 2)', 'COD_CLIENTE' => '006409', 'CLI_RA_SOC' => 'STMicroelectronics Silicon Carbide', 'COD_DIVISIONE' => 'SMP', 'COD_ARTICOLO' => 'F101010', 'DES_ARTICOLO' => '.', 'COD_ARTICOLO_RIF' => '', 'CENTRO_COSTO' => 'A51', 'DARE' => 0, 'AVERE' => 50000, 'SALDO' => 50000, 'COD_CONTO' => '606004', 'ESERCIZIO' => '2022', 'TIPO_CONTO' => 'TRANSITORIO' ],
@@ -198,7 +200,7 @@ class SaldiManager {
     }
     
     function avanzamentoWorkflow($codCommessa) {
-        global $logged_user, $panthera;
+        global $logged_user, $panthera, $ID_AZIENDA, $DATASET, $SUBSET, $STATO_WF_START, $STATO_WF_END;
 
         if (!$panthera->mock) {
             $sql = "UPDATE THIP.COMMESSE SET WF_NODE_ID='$STATO_WF_END' WHERE ID_COMMESSA='$codCommessa' ";
@@ -234,7 +236,9 @@ class SaldiManager {
     }
 
     function preparaGiroconto($codCommessa) {
-        global $panthera, $logged_user;
+        global $panthera, $logged_user, $ID_AZIENDA, $DATASET, $SUBSET, $NUMERATORE,
+            $CAU_CONTABILE, $ORIGINE, $TP_NUMERATORE_AN, $NUMERATORE_AN, $EVENTO,
+            $CENTRO_COSTO_AN, $CONTO_Z, $CENTRO_COSTO_Z;
         
         if ($panthera->mock) {
             return;
