@@ -35,7 +35,12 @@ $matrice_conti = [
 ];
 
 /* stati del workflow da gestire */
-define('STATO_WF_START', '030');
-define('STATO_WF_END', '040');
+$STATO_WF_START = '030';
+$STATO_WF_END = '040';
+
+/* altre costanti Panthera */
+$ID_AZIENDA = '001';
+$NUMERATORE = 'GEN';
+$CAU_CONTABILE = 'GCR';
 
 ?>

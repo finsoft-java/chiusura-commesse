@@ -23,7 +23,6 @@ class SaldiManager {
                 }
             }
         } else {
-            $statoIniziale = STATO_WF_START;
             $conti_transitori_imploded = "'" . implode("','", array_keys($matrice_conti)) .  "'";
             $conti_ricavi_imploded = "'" . implode("','", array_values($matrice_conti)) .  "'";
             $sql1 = "SELECT
@@ -54,7 +53,7 @@ class SaldiManager {
                         group by ID_AZIENDA, R_COMMESSA
                     ) FAT on FAT.ID_AZIENDA = S.T01CD and FAT.R_COMMESSA = S.GPD0CD
                     WHERE S.GT01CD = 'BASE'
-                        and S.T01CD = '001'
+                        and S.T01CD = '$ID_AZIENDA'
                         and S.GT02CD = 'CONS'
                         and S.GSL0TPSL = 1
                         and S.GS02CD = '*****'
@@ -62,7 +61,7 @@ class SaldiManager {
                         and S.GPV0CD not like 'ZZ%'           -- contropartita
                         and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
                         and ('$codCommessa'='' or S.GPD0CD='$codCommessa')
-                        -- and CD.WF_NODE_ID='$statoIniziale'
+                        -- and CD.WF_NODE_ID='$STATO_WF_START'
                     GROUP BY
                         S.GPV0CD,S.GPD0CD,S.T36CD,S.GPC0CD,S.GSL0AUCA,S.GSL0DUCA,
                         VOC.VOCDSNOR,
@@ -171,7 +170,7 @@ class SaldiManager {
                     LEFT JOIN THIP.ARTICOLI AR2 on AR2.ID_AZIENDA = S.T01CD and AR2.ID_ARTICOLO = S.GPS3CD
                     LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
                     WHERE S.GT01CD = 'BASE'
-                        and S.T01CD = '001'
+                        and S.T01CD = '$ID_AZIENDA'
                         and S.GT02CD = 'CONS'
                         and S.GSL0TPSL = 1
                         and S.GS02CD = '*****'
@@ -202,11 +201,7 @@ class SaldiManager {
         global $logged_user, $panthera;
 
         if (!$panthera->mock) {
-            $statoIniziale = STATO_WF_START;
-            $statoFinale = STATO_WF_END;
-            $idAzienda = '001';
-
-            $sql = "UPDATE THIP.COMMESSE SET WF_NODE_ID='$statoFinale' WHERE ID_COMMESSA='$codCommessa' ";
+            $sql = "UPDATE THIP.COMMESSE SET WF_NODE_ID='$STATO_WF_END' WHERE ID_COMMESSA='$codCommessa' ";
             $panthera->execute_update($sql);
 
             // transazione per incrementare il numeratore
@@ -217,7 +212,7 @@ class SaldiManager {
             $id = $panthera->select_single_value($sql);
             sqlsrv_commit($panthera->conn);
 
-            $utente = $logged_user->nome_utente . '_' . $idAzienda;
+            $utente = $logged_user->nome_utente . '_' . $ID_AZIENDA;
             $sql = "INSERT INTO THERA.WF_LOG(
                         ID,
                         WF_CLASS_ID,WF_ID,WF_ARC_ID,
@@ -229,9 +224,9 @@ class SaldiManager {
                     VALUES (
                         $id,
                         51,'COM_WF','-',
-                        '$statoIniziale','-',
-                        '$statoFinale','-',
-                        '$idAzienda'+CHAR(22)+'$codCommessa',
+                        '$STATO_WF_START','-',
+                        '$STATO_WF_END','-',
+                        '$ID_AZIENDA'+CHAR(22)+'$codCommessa',
                         '$utente',
                         'Avanzamento via piattaforma Ricavi Commesse') ";
             $panthera->execute_update($sql);
@@ -239,7 +234,7 @@ class SaldiManager {
     }
 
     function preparaGiroconto($codCommessa) {
-        global $panthera;
+        global $panthera, $logged_user;
         
         if ($panthera->mock) {
             return;
@@ -248,11 +243,14 @@ class SaldiManager {
         print_error(500, 'Funzione non implementata');
 
         $conti_transitori_imploded = "'" . implode("','", array_keys($matrice_conti)) .  "'";
+
         $decode_conto = 'CASE ';
         foreach ($matrice_conti as $t => $r) {
             $decode_conto .= "WHEN S.GPV0CD='$t' THEN '$r' ";
         }
         $decode_conto .= "ELSE '' END";
+
+        $utente = $logged_user->nome_utente . '_' . $ID_AZIENDA;
 
         $query1 = "INSERT INTO FINANCE.BETRAPT(
                         T01CD,      -- azienda
@@ -295,10 +293,10 @@ class SaldiManager {
                         0 as NUM_REG,
                         (ROW_NUMBER() OVER(ORDER BY S.T01CD)) * 2 - 1 as NUM_RIGA,
                         '1' as STATO,
-                        'GEN' as NUMERATORE,
+                        '$NUMERATORE' as NUMERATORE,
                         DATEPART(yy, S.GAT0CD) as TRACPESE,
                         '3' as TRATPRIM,
-                        'GCR' as CAUSALE_CONTABILE,
+                        '$CAU_CONTABILE' as CAUSALE_CONTABILE,
                         'Giroconto Ricavi' as TRADSCAU, -- teoricamente ricavabile da BBT02PT
                         '' as TRADSAGG,
                         S.GPV0CD as COD_CONTO,
@@ -330,7 +328,7 @@ class SaldiManager {
                         WHERE P.MAPSTAPA = 1 -- solo partite aperte
                         ) PARTITE ON PARTITE.T01CD=S.T01CD and PARTITE.R_COMMESSA=S.GPD0CD and NUM=1
                     WHERE GT01CD = 'BASE'
-                        and S.T01CD = '001'
+                        and S.T01CD = '$ID_AZIENDA'
                         and S.GT02CD = 'CONS'
                         and S.GSL0TPSL = 1
                         and S.GS02CD = '*****'
@@ -346,10 +344,10 @@ class SaldiManager {
                         0 as NUM_REG,
                         (ROW_NUMBER() OVER(ORDER BY S.T01CD)) * 2 as NUM_RIGA,
                         '1' as STATO,
-                        'GEN' as NUMERATORE,
+                        '$NUMERATORE' as NUMERATORE,
                         DATEPART(yy, S.GAT0CD) as TRACPESE,
                         '3' as TRATPRIM,
-                        'GCR' as CAUSALE_CONTABILE,
+                        '$CAU_CONTABILE' as CAUSALE_CONTABILE,
                         'Giroconto Ricavi' as TRADSCAU, -- teoricamente ricavabile da BBT02PT
                         '' as TRADSAGG,
                         $decode_conto as COD_CONTO,
@@ -381,7 +379,7 @@ class SaldiManager {
                         WHERE P.MAPSTAPA = 1 -- solo partite aperte
                         ) PARTITE ON PARTITE.T01CD=S.T01CD and PARTITE.R_COMMESSA=S.GPD0CD and NUM=1
                     WHERE GT01CD = 'BASE'
-                        and S.T01CD = '001'
+                        and S.T01CD = '$ID_AZIENDA'
                         and S.GT02CD = 'CONS'
                         and S.GSL0TPSL = 1
                         and S.GS02CD = '*****'
@@ -391,14 +389,13 @@ class SaldiManager {
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
                     GROUP BY S.T01CD,S.GPV0CD,S.GPD0CD,S.GAT0CD,S.GSL0AUCA,S.GSL0DUCA,PARTITE.MAPAAPAR,PARTITE.MAPNRPAR
-  --  UNION $decode_conto
                 ";
         $panthera->execute_update($query1);
 
         
 
         $query2 = "INSERT INTO FINANCE.GIPNPT(
-                        GT01CD,
+                        GT01CD,     -- dataset
                         DIZSTATO,
                         DIZUTCRE,
                         DIZDTCRE,
@@ -406,36 +403,36 @@ class SaldiManager {
                         DIZUTAGG,
                         DIZDTAGG,
                         DIZHHAGG,
-                        GIPNNATR,
-                        GT05CD,
-                        GT14CD,
-                        T01CD,
-                        GIPNDTRE,
-                        GIPNDTCM,
-                        GT02CD,
-                        GT03CD,
-                        GEV0CD,
-                        GC28CD,
-                        GT11CD,
-                        GIPNRFOR,
-                        GIPNDTOR,
-                        GIPNRIFE,
-                        GIPNDTDC,
-                        GIPNRFAB,
-                        GIPNDTAB,
-                        GIPNDTIC,
-                        GIPNDTFC,
-                        GIPNAZCO,
-                        VOCCD,
-                        CLICD,
-                        FORCD,
+                        GIPNNATR,   -- Progressivo di input
+                        GT05CD,     -- origine
+                        GT14CD,     -- tipo numeratore
+                        T01CD,      -- azienda
+                        GIPNDTRE,   -- Data Registrazione
+                        GIPNDTCM,   -- Data Competenza
+                        GT02CD,     -- Subset
+                        GT03CD,     -- Versione
+                        GEV0CD,     -- Evento
+                        GC28CD,     -- Alias
+                        GT11CD,     -- Causale
+                        GIPNRFOR,   -- nr rif Origine
+                        GIPNDTOR,   -- data origine
+                        GIPNRIFE,   -- nr rif. doc
+                        GIPNDTDC,   -- data doc
+                        GIPNRFAB,   -- nr rif abbinamento
+                        GIPNDTAB,   -- data abbinamento
+                        GIPNDTIC,   -- data inizio competenza
+                        GIPNDTFC,   -- data fine competenza
+                        GIPNAZCO,   -- azienda origine
+                        VOCCD,      -- voce contabile
+                        CLICD,      -- cliente
+                        FORCD,      -- fornitore
                         GIPNRFL1,
                         GIPNRFL2,
                         GIPNRFL3,
                         GIPNDTL1,
                         GIPNDTL2,
                         GIPNDTL3,
-                        T36CD,
+                        T36CD,      -- divisione
                         GPV0CD,
                         GPC0CD,
                         GPD0CD,
@@ -444,31 +441,31 @@ class SaldiManager {
                         GPS3CD,
                         GPS4CD,
                         GPS5CD,
-                        GIPNDIV1,
-                        VOCCPQ,
-                        CENCPQ,
-                        COMCPQ,
-                        SEG1CPQ,
+                        GIPNDIV1,   -- divisione CP
+                        VOCCPQ,     -- voce CP
+                        CENCPQ,     -- centro CP
+                        COMCPQ,     -- commessa CP
+                        SEG1CPQ,    -- segmento CP
                         SEG2CPQ,
                         SEG3CPQ,
                         SEG4CPQ,
                         SEG5CPQ,
-                        GIPNDSNO,
-                        GIPNIUCA,
-                        GIPNIUCG,
-                        GIPNIUCT,
-                        GIPNQUNT,
-                        GIPNSECO,
-                        GT18CD,
-                        GIPNDCAT,
-                        GT12CD,
-                        GIPNCMBT,
-                        GIPNDCAG,
-                        GIPNCAGR,
-                        GIPNCAMB,
-                        GT04CD,
-                        GT15CD,
-                        GIPNUNIT,
+                        GIPNDSNO,   -- descrizione normale
+                        GIPNIUCA,   -- importo UCA
+                        GIPNIUCG,   -- importo UCG
+                        GIPNIUCT,   -- importo UCT
+                        GIPNQUNT,   -- quantita
+                        GIPNSECO,   -- segno
+                        GT18CD,     -- valuta
+                        GIPNDCAT,   -- data cambio
+                        GT12CD,     -- tipo cambio
+                        GIPNCMBT,   -- cambio
+                        GIPNDCAG,   -- data cambio gruppo
+                        GIPNCAGR,   -- tipo cambio gruppo
+                        GIPNCAMB,   -- cambio gruppo
+                        GT04CD,     -- unita misura
+                        GT15CD,     -- tipo unitario
+                        GIPNUNIT,   -- unitario
                         GIPNSER1,
                         GIPNSER2,
                         GIPNSER3,
@@ -489,25 +486,25 @@ class SaldiManager {
                         GIPNUNI3,
                         GIPNUNI4,
                         GIPNUNI5,
-                        GIPNNAOR,
-                        GIPNPROR,
-                        GIPNA256,
-                        GIPNSEPA,
-                        GIPNTIOR,
-                        GIPNTPIN,
-                        GIPNTPPE,
-                        GIPNNLOG,
-                        T97CD,
-                        GIPNDTEL,
-                        GIPNCHC1,
-                        GIPNCHC2)
+                        GIPNNAOR,       -- Numero assoluto Origine
+                        GIPNPROR,       -- Riga origine
+                        GIPNA256,       -- Criterio accorpamento
+                        GIPNSEPA,       -- carattere separatore
+                        GIPNTIOR,       -- Tipo Origine
+                        GIPNTPIN,       -- Tipo Inserimento
+                        GIPNTPPE,       -- Tipo Periodo
+                        GIPNNLOG,       -- prog.elab.
+                        T97CD,          -- Oggetto applicativo ?!?
+                        GIPNDTEL,       -- DT Elaborazione
+                        GIPNCHC1,       -- Check Elaborato
+                        GIPNCHC2)       -- Check da Eliminare
                     SELECT
                         'BASE' as DATASET,
                         '1' as STATO,
-                        'ADMIN' as UTENTE_CRZ,
+                        '$utente' as UTENTE_CRZ,
                         CURRENT_DATE as DATA_CRZ,
                         CURRENT_TIME as ORA_CRZ,
-                        'ADMIN' as UTENTE_AGG,
+                        '$utente' as UTENTE_AGG,
                         CURRENT_DATE as DATA_AGG,
                         CURRENT_TIME as ORA_AGG,
                         ??? as PROGRESSIVO,         -- GIPNPT ha un progressivo “univoco” (GIPNNATR) che va gestito riprendendolo e incrementandolo dal file GIPNNPT 
@@ -613,7 +610,7 @@ class SaldiManager {
                     LEFT JOIN THIP.ARTICOLI AR2 on AR2.ID_AZIENDA = S.T01CD and AR2.ID_ARTICOLO = S.GPS3CD
                     LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
                     WHERE GT01CD = 'BASE'
-                        and T01CD = '001'
+                        and T01CD = '$ID_AZIENDA'
                         and GT02CD = 'CONS'
                         and GSL0TPSL = 1
                         and GS02CD = '*****'
