@@ -293,7 +293,7 @@ class SaldiManager {
                     SELECT
                         S.T01CD as COD_AZIENDA,
                         0 as NUM_REG,
-                        ROW_NUMBER() OVER( ORDER BY S.T01CD ) as NUM_RIGA,
+                        (ROW_NUMBER() OVER(ORDER BY S.T01CD)) * 2 - 1 as NUM_RIGA,
                         '1' as STATO,
                         'GEN' as NUMERATORE,
                         DATEPART(yy, S.GAT0CD) as TRACPESE,
@@ -308,11 +308,11 @@ class SaldiManager {
                         GETDATE() as DATA_DOC,
                         '0001-01-01' as DATA_VALUTA,
                         '0001-01-01' as DATA_SCAD_PAG,
-               ...         '' as ANNO_PARTITA,
-               ...         '' as NR_PARTITA,
-                        '0'as TRANPIVA
-                        '1' as TRATPVAL
-               ...         '1' oppure '2' as TRASEGNO,
+                        PARTITE.MAPAAPAR as ANNO_PARTITA,
+                        PARTITE.MAPNRPAR as NR_PARTITA,
+                        '0'as TRANPIVA,
+                        '1' as TRATPVAL,
+                        '1' as TRASEGNO,
                         (S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,   -- importo in val. prim.
                         '0' as TRAIIVVP,   -- Imponibile IVA val primaria
                         '0' as TRAIVAVP,   -- Imposta IVA val primaria
@@ -321,17 +321,76 @@ class SaldiManager {
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
                     LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
+                    LEFT JOIN (
+                        SELECT P.T01CD, P.MAPAAPAR, P.MAPNRPAR, S.R_COMMESSA,
+                            ROW_NUMBER()OVER(PARTITION BY R_COMMESSA ORDER BY MAPAAPAR DESC,MAPNRPAR DESC) AS NUM
+                        FROM FINANCE.BCMAPPT P
+                        JOIN THIPPERS.YSTAT_FATVEN_V01 S on S.ID_AZIENDA = P.T01CD and P.MAPAAPAR = S.ANNO_FAT
+                            and P.MAPNRPAR = S.NUMERO_FATTURA 
+                        WHERE P.MAPSTAPA = 1 -- solo partite aperte
+                        ) PARTITE ON PARTITE.T01CD=S.T01CD and PARTITE.R_COMMESSA=S.GPD0CD and NUM=1
                     WHERE GT01CD = 'BASE'
-                        and T01CD = '001'
-                        and GT02CD = 'CONS'
-                        and GSL0TPSL = 1
-                        and GS02CD = '*****'
-                        and GPV0CD not like 'ZZ%'
-                        --and GPC0CD = 'CR001'
-                        and GSL0DUCA <> GSL0AUCA)
+                        and S.T01CD = '001'
+                        and S.GT02CD = 'CONS'
+                        and S.GSL0TPSL = 1
+                        and S.GS02CD = '*****'
+                        and S.GPV0CD not like 'ZZ%'
+                        --and S.GPC0CD = 'CR001'
+                        and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                    GROUP BY S.T01CD,S.GPV0CD,S.GPD0CD
+                    GROUP BY S.T01CD,S.GPV0CD,S.GPD0CD,S.GAT0CD,S.GSL0AUCA,S.GSL0DUCA,PARTITE.MAPAAPAR,PARTITE.MAPNRPAR
+                UNION
+                    SELECT
+                        S.T01CD as COD_AZIENDA,
+                        0 as NUM_REG,
+                        (ROW_NUMBER() OVER(ORDER BY S.T01CD)) * 2 as NUM_RIGA,
+                        '1' as STATO,
+                        'GEN' as NUMERATORE,
+                        DATEPART(yy, S.GAT0CD) as TRACPESE,
+                        '3' as TRATPRIM,
+                        'GCR' as CAUSALE_CONTABILE,
+                        '' as TRADSCAU,
+                        '' as TRADSAGG,
+                        $decode_conto as COD_CONTO,
+                        GETDATE() as DATA_REG,
+                        '0001-01-01' as DATA_OPERAZ,
+                        '0001-01-01' as DATA_IVA,
+                        GETDATE() as DATA_DOC,
+                        '0001-01-01' as DATA_VALUTA,
+                        '0001-01-01' as DATA_SCAD_PAG,
+                        PARTITE.MAPAAPAR as ANNO_PARTITA,
+                        PARTITE.MAPNRPAR as NR_PARTITA,
+                        '0'as TRANPIVA,
+                        '1' as TRATPVAL,
+                        '2' as TRASEGNO,
+                        (S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,   -- importo in val. prim.
+                        '0' as TRAIIVVP,   -- Imponibile IVA val primaria
+                        '0' as TRAIVAVP,   -- Imposta IVA val primaria
+                        S.GPD0CD as MOVT62CD
+                    FROM FINANCE.GSL0PT S
+                    JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
+                    JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
+                    LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
+                    LEFT JOIN (
+                        SELECT P.T01CD, P.MAPAAPAR, P.MAPNRPAR, S.R_COMMESSA,
+                            ROW_NUMBER()OVER(PARTITION BY R_COMMESSA ORDER BY MAPAAPAR DESC,MAPNRPAR DESC) AS NUM
+                        FROM FINANCE.BCMAPPT P
+                        JOIN THIPPERS.YSTAT_FATVEN_V01 S on S.ID_AZIENDA = P.T01CD and P.MAPAAPAR = S.ANNO_FAT
+                            and P.MAPNRPAR = S.NUMERO_FATTURA 
+                        WHERE P.MAPSTAPA = 1 -- solo partite aperte
+                        ) PARTITE ON PARTITE.T01CD=S.T01CD and PARTITE.R_COMMESSA=S.GPD0CD and NUM=1
+                    WHERE GT01CD = 'BASE'
+                        and S.T01CD = '001'
+                        and S.GT02CD = 'CONS'
+                        and S.GSL0TPSL = 1
+                        and S.GS02CD = '*****'
+                        and S.GPV0CD not like 'ZZ%'
+                        --and S.GPC0CD = 'CR001'
+                        and S.GSL0DUCA <> S.GSL0AUCA
+                        and S.GPD0CD = '$codCommessa'
+                        and S.GPV0CD in ($conti_transitori_imploded)
+                    GROUP BY S.T01CD,S.GPV0CD,S.GPD0CD,S.GAT0CD,S.GSL0AUCA,S.GSL0DUCA,PARTITE.MAPAAPAR,PARTITE.MAPNRPAR
   --  UNION $decode_conto
                 ";
         $panthera->execute_update($query1);
@@ -560,7 +619,7 @@ class SaldiManager {
                         and GS02CD = '*****'
                         and GPV0CD not like 'ZZ%'
                         --and GPC0CD = 'CR001'
-                        and (GSL0DUCA <> GSL0AUCA)
+                        and GSL0DUCA <> GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
   -- UNION $decode_conto
