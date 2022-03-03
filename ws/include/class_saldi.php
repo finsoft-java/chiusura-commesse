@@ -392,7 +392,7 @@ class SaldiManager {
                 ";
         $panthera->execute_update($query1);
 
-        
+// FIXME PER FARE LA CONTABILITA' ANALITICA DOVREI GIA' AVERE IL NUM.REG. COGE !!!!
 
         $query2 = "INSERT INTO FINANCE.GIPNPT(
                         GT01CD,     -- dataset
@@ -589,8 +589,8 @@ class SaldiManager {
                         0 as UNITARIO_SERV3,
                         0 as UNITARIO_SERV4,
                         0 as UNITARIO_SERV5,
-                        NUM_REG, -- come quello di BETRAPT ???
-                        NUM_RIGA, -- come quello di BETRAPT ???
+                        0 as NUM_REG, -- come quello di BETRAPT ???
+                        0 as NUM_RIGA, -- come quello di BETRAPT ???
                         '' as CHIAVE_ORIGINE,
                         '' as SEPARATORE,
                         '' as TIPO_ORIGINE,
