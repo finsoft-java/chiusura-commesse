@@ -52,9 +52,9 @@ class SaldiManager {
                         where ID_AZIENDA = '001' and R_COMMESSA is not null and ID_ANNO_DOC > 2020
                         group by ID_AZIENDA, R_COMMESSA
                     ) FAT on FAT.ID_AZIENDA = S.T01CD and FAT.R_COMMESSA = S.GPD0CD
-                    WHERE S.GT01CD = 'BASE'
-                        and S.T01CD = '$ID_AZIENDA'
-                        and S.GT02CD = 'CONS'
+                    WHERE S.T01CD = '$ID_AZIENDA'
+                        and S.GT01CD = '$DATASET'
+                        and S.GT02CD = '$SUBSET'
                         and S.GSL0TPSL = 1
                         and S.GS02CD = '*****'
                         and DATEPART(yy, S.GAT0CD) > 2020     -- paracadute
@@ -169,14 +169,14 @@ class SaldiManager {
                     LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
                     LEFT JOIN THIP.ARTICOLI AR2 on AR2.ID_AZIENDA = S.T01CD and AR2.ID_ARTICOLO = S.GPS3CD
                     LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
-                    WHERE S.GT01CD = 'BASE'
-                        and S.T01CD = '$ID_AZIENDA'
-                        and S.GT02CD = 'CONS'
+                    WHERE S.T01CD = '$ID_AZIENDA'
+                        and S.GT01CD = '$DATASET'
+                        and S.GT02CD = '$SUBSET'
                         and S.GSL0TPSL = 1
                         and S.GS02CD = '*****'
                         and DATEPART(yy, S.GAT0CD) > 2020     -- paracadute
                         and S.GPV0CD not like 'ZZ%'           -- contropartita
-                        and S.GPC0CD = 'CR001'
+                        and S.GPC0CD = '$CENTRO_COSTO'
                         and not (S.GSL0DUCA = 0 and S.GSL0AUCA = 0)
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
@@ -327,13 +327,13 @@ class SaldiManager {
                             and P.MAPNRPAR = S.NUMERO_FATTURA 
                         WHERE P.MAPSTAPA = 1 -- solo partite aperte
                         ) PARTITE ON PARTITE.T01CD=S.T01CD and PARTITE.R_COMMESSA=S.GPD0CD and NUM=1
-                    WHERE GT01CD = 'BASE'
-                        and S.T01CD = '$ID_AZIENDA'
-                        and S.GT02CD = 'CONS'
+                    WHERE S.T01CD = '$ID_AZIENDA'
+                        and S.GT01CD = '$DATASET'
+                        and S.GT02CD = '$SUBSET'
                         and S.GSL0TPSL = 1
                         and S.GS02CD = '*****'
                         and S.GPV0CD not like 'ZZ%'
-                        --and S.GPC0CD = 'CR001'
+                        --and S.GPC0CD = '$CENTRO_COSTO'
                         and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
@@ -378,13 +378,13 @@ class SaldiManager {
                             and P.MAPNRPAR = S.NUMERO_FATTURA 
                         WHERE P.MAPSTAPA = 1 -- solo partite aperte
                         ) PARTITE ON PARTITE.T01CD=S.T01CD and PARTITE.R_COMMESSA=S.GPD0CD and NUM=1
-                    WHERE GT01CD = 'BASE'
-                        and S.T01CD = '$ID_AZIENDA'
-                        and S.GT02CD = 'CONS'
+                    WHERE S.T01CD = '$ID_AZIENDA'
+                        and S.GT01CD = '$DATASET'
+                        and S.GT02CD = '$SUBSET'
                         and S.GSL0TPSL = 1
                         and S.GS02CD = '*****'
                         and S.GPV0CD not like 'ZZ%'
-                        --and S.GPC0CD = 'CR001'
+                        --and S.GPC0CD = '$CENTRO_COSTO'
                         and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
@@ -414,6 +414,7 @@ class SaldiManager {
                         GEV0CD,     -- Evento
                         GC28CD,     -- Alias
                         GT11CD,     -- Causale
+                        GT09CD,     -- tipo operazione (numeratore?)
                         GIPNRFOR,   -- nr rif Origine
                         GIPNDTOR,   -- data origine
                         GIPNRIFE,   -- nr rif. doc
@@ -437,8 +438,8 @@ class SaldiManager {
                         GPC0CD,
                         GPD0CD,
                         GPS1CD,
-                        GPS2CD,
-                        GPS3CD,
+                        GPS2CD,     -- SEGM2 = codice articolo
+                        GPS3CD,     -- SEGM3 = codice articolo rif.
                         GPS4CD,
                         GPS5CD,
                         GIPNDIV1,   -- divisione CP
@@ -518,6 +519,7 @@ class SaldiManager {
                         '$EVENTO' as EVENTO,
                         '' as ALIAS,
                         '$CAU_AN' as CAUSALE,
+                        '$NUMERATORE' as TIPO_OPERAZIONE,
                         '0001-01-01' as DATA_REG_ORIGINE,
                         '' as NUMERO_DOC,
                         '0001-01-01' as DATA_DOC,
@@ -540,8 +542,8 @@ class SaldiManager {
                         S.GPC0CD as CENTRO_COSTO,
                         S.GPD0CD as COD_COMMESSA,
                         '' as SEGM1,
-                        '' as SEGM2,
-                        '' as SEGM3,
+                        S.GPS2CD as SEGM2,
+                        S.GPS3CD as SEGM3,
                         '' as SEGM4,
                         '' as SEGM5,
                         S.T36CD as COD_DIVISIONE_PQ,
@@ -549,11 +551,11 @@ class SaldiManager {
                         S.GPC0CD as CENTRO_COSTO_PQ,
                         S.GPD0CD as COD_COMMESSA_PQ,
                         '' as SEGM1_PQ,
-                        '' as SEGM2_PQ,
-                        '' as SEGM3_PQ,
+                        S.GPS2CD as SEGM2_PQ,
+                        S.GPS3CD as SEGM3_PQ,
                         '' as SEGM4_PQ,
                         '' as SEGM5_PQ,
-                        'Giroconto Ricavi' as GIPN_DESCRIZIONE,
+                        'Giroconto Ricavi' as GIPN_DESCRIZIONE,     -- teoricamente ricavabile da ????
                         GSL0AUCA-GSL0DUCA as IMPORTO_VAL_TRANSAZ,
                         GSL0AUCA-GSL0DUCA as IMPORTO_VAL_AZ,
                         0 as IMPORTO_VAL_GRP,
@@ -608,18 +610,29 @@ class SaldiManager {
                     LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
                     LEFT JOIN THIP.ARTICOLI AR2 on AR2.ID_AZIENDA = S.T01CD and AR2.ID_ARTICOLO = S.GPS3CD
                     LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
-                    WHERE GT01CD = 'BASE'
-                        and T01CD = '$ID_AZIENDA'
-                        and GT02CD = 'CONS'
-                        and GSL0TPSL = 1
-                        and GS02CD = '*****'
-                        and GPV0CD not like 'ZZ%'
-                        --and GPC0CD = 'CR001'
-                        and GSL0DUCA <> GSL0AUCA
+                    WHERE S.T01CD = '$ID_AZIENDA'
+                        and S.GT01CD = '$DATASET'
+                        and S.GT02CD = '$SUBSET'
+                        and S.GSL0TPSL = 1
+                        and S.GS02CD = '*****'
+                        and S.GPC0CD = '$CENTRO_COSTO'
+                        and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-  -- UNION $decode_conto
                 ";
+
+/*
+In contabilità analitica ogni riga viene moltiplicata per 4:
+
+GPV0CD      VOCCD       GTR1SECO    GTR1V01     GTR1CE1     GPC0CD
+====================================================================
+606002      606002      1           ZZCONTR     ZZCONTR     CC999
+ZZCONTR     606002      2           (blank)     (blank)     ZZCONTR
+901001      901001      2           ZZCONTR     ZZCONTR     CR001
+ZZCONTR     901001      1           (blank)     (blank)     ZZCONTR
+
+*/
+
             $panthera->execute_update($query2);
     }
 }
