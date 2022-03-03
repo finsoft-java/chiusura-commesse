@@ -451,9 +451,9 @@ class SaldiManager {
                         SEG4CPQ,
                         SEG5CPQ,
                         GIPNDSNO,   -- descrizione normale
+                        GIPNIUCT,   -- importo UCT
                         GIPNIUCA,   -- importo UCA
                         GIPNIUCG,   -- importo UCG
-                        GIPNIUCT,   -- importo UCT
                         GIPNQUNT,   -- quantita
                         GIPNSECO,   -- segno
                         GT18CD,     -- valuta
@@ -494,12 +494,12 @@ class SaldiManager {
                         GIPNTPIN,       -- Tipo Inserimento
                         GIPNTPPE,       -- Tipo Periodo
                         GIPNNLOG,       -- prog.elab.
-                        T97CD,          -- Oggetto applicativo ?!?
+                        T97CD,          -- Oggetto applicativo
                         GIPNDTEL,       -- DT Elaborazione
                         GIPNCHC1,       -- Check Elaborato
                         GIPNCHC2)       -- Check da Eliminare
                     SELECT
-                        'BASE' as DATASET,
+                        '$DATASET' as DATASET,
                         '1' as STATO,
                         '$utente' as UTENTE_CRZ,
                         CURRENT_DATE as DATA_CRZ,
@@ -507,18 +507,17 @@ class SaldiManager {
                         '$utente' as UTENTE_AGG,
                         CURRENT_DATE as DATA_AGG,
                         CURRENT_TIME as ORA_AGG,
-                        ??? as PROGRESSIVO,         -- GIPNPT ha un progressivo “univoco” (GIPNNATR) che va gestito riprendendolo e incrementandolo dal file GIPNNPT 
-                        ??? as ORIGINE,
-                        ??? as NUMERATORE,
-                        ??? as TIPO_NUMERATORE,
+                        (ROW_NUMBER() OVER(ORDER BY S.T01CD)) * 2 as PROGRESSIVO,         -- GIPNPT ha un progressivo “univoco” (GIPNNATR) che va gestito riprendendolo e incrementandolo dal file GIPNNPT 
+                        '$ORIGINE' as ORIGINE,
+                        '$TP_NUMERATORE_AN' as TIPO_NUMERATORE,
                         S.T01CD as COD_AZIENDA,
-                        ??? as DATA_REG,
-                        ??? as DATA_COMPETENZA,
-                        'CONS' as SUBSET,
+                        GETDATE() as DATA_REG,
+                        GETDATE() as DATA_COMPETENZA,
+                        '$SUBSET' as SUBSET,
                         '' as VERSIONE,
-                        'COGE_E' as EVENTO,
+                        '$EVENTO' as EVENTO,
                         '' as ALIAS,
-                        ??? as CAUSALE,
+                        '$CAU_AN' as CAUSALE,
                         '0001-01-01' as DATA_REG_ORIGINE,
                         '' as NUMERO_DOC,
                         '0001-01-01' as DATA_DOC,
@@ -554,10 +553,10 @@ class SaldiManager {
                         '' as SEGM3_PQ,
                         '' as SEGM4_PQ,
                         '' as SEGM5_PQ,
-                        '' as GIPN_DESCRIZIONE,
-                        GSL0AUCA-GSL0DUCA as IMPORTO_VAL_AZ,
-                        GSL0AUCA-GSL0DUCA as IMPORTO_VAL_GRP,
+                        'Giroconto Ricavi' as GIPN_DESCRIZIONE,
                         GSL0AUCA-GSL0DUCA as IMPORTO_VAL_TRANSAZ,
+                        GSL0AUCA-GSL0DUCA as IMPORTO_VAL_AZ,
+                        0 as IMPORTO_VAL_GRP,
                         0 as QTY,
                         '1' as SEGNO,   -- Impostare uguale a segno di BETRAPT
                         '' as VALUTA,
