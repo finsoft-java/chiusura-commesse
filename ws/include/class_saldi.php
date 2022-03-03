@@ -299,7 +299,7 @@ class SaldiManager {
                         DATEPART(yy, S.GAT0CD) as TRACPESE,
                         '3' as TRATPRIM,
                         'GCR' as CAUSALE_CONTABILE,
-                        '' as TRADSCAU,
+                        'Giroconto Ricavi' as TRADSCAU, -- teoricamente ricavabile da BBT02PT
                         '' as TRADSAGG,
                         S.GPV0CD as COD_CONTO,
                         GETDATE() as DATA_REG,
@@ -313,9 +313,9 @@ class SaldiManager {
                         '0'as TRANPIVA,
                         '1' as TRATPVAL,
                         '1' as TRASEGNO,
-                        (S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,   -- importo in val. prim.
-                        '0' as TRAIIVVP,   -- Imponibile IVA val primaria
-                        '0' as TRAIVAVP,   -- Imposta IVA val primaria
+                        (S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,
+                        '0' as TRAIIVVP,
+                        '0' as TRAIVAVP,
                         S.GPD0CD as MOVT62CD
                     FROM FINANCE.GSL0PT S
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
@@ -350,7 +350,7 @@ class SaldiManager {
                         DATEPART(yy, S.GAT0CD) as TRACPESE,
                         '3' as TRATPRIM,
                         'GCR' as CAUSALE_CONTABILE,
-                        '' as TRADSCAU,
+                        'Giroconto Ricavi' as TRADSCAU, -- teoricamente ricavabile da BBT02PT
                         '' as TRADSAGG,
                         $decode_conto as COD_CONTO,
                         GETDATE() as DATA_REG,
@@ -364,9 +364,9 @@ class SaldiManager {
                         '0'as TRANPIVA,
                         '1' as TRATPVAL,
                         '2' as TRASEGNO,
-                        (S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,   -- importo in val. prim.
-                        '0' as TRAIIVVP,   -- Imponibile IVA val primaria
-                        '0' as TRAIVAVP,   -- Imposta IVA val primaria
+                        (S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,
+                        '0' as TRAIIVVP,
+                        '0' as TRAIVAVP,
                         S.GPD0CD as MOVT62CD
                     FROM FINANCE.GSL0PT S
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
