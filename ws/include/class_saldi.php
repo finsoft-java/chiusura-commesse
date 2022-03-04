@@ -256,6 +256,8 @@ class SaldiManager {
 
         $utente = $logged_user->nome_utente . '_' . $ID_AZIENDA;
 
+        $numReg = select_single_value("SELECT NLAST from FINANCE.BETRANPT WHERE T01CD='$ID_AZIENDA'");
+
         $query1 = "INSERT INTO FINANCE.BETRAPT(
                         T01CD,      -- azienda
                         TRANUREG,   -- num.reg.
@@ -294,22 +296,22 @@ class SaldiManager {
                         )
                     SELECT
                         S.T01CD as COD_AZIENDA,
-                        0 as NUM_REG,
+                        $numReg as NUM_REG,
                         (ROW_NUMBER() OVER(ORDER BY S.T01CD)) * 2 - 1 as NUM_RIGA,
                         '1' as STATO,
                         '$NUMERATORE' as NUMERATORE,
                         DATEPART(yy, S.GAT0CD) as TRACPESE,
                         '3' as TRATPRIM,
-                        '$CAU_CONTABILE' as CAUSALE_CONTABILE,
-                        'Giroconto Ricavi' as TRADSCAU, -- teoricamente ricavabile da BBT02PT
+                        CAU.T02CD as CAUSALE_CONTABILE,
+                        CAU.T02DSNOR as TRADSCAU,
                         '' as TRADSAGG,
                         S.GPV0CD as COD_CONTO,
                         GETDATE() as DATA_REG,
-                        '0001-01-01' as DATA_OPERAZ,
-                        '0001-01-01' as DATA_IVA,
+                        '1753-01-01' as DATA_OPERAZ,
+                        '1753-01-01' as DATA_IVA,
                         GETDATE() as DATA_DOC,
-                        '0001-01-01' as DATA_VALUTA,
-                        '0001-01-01' as DATA_SCAD_PAG,
+                        '1753-01-01' as DATA_VALUTA,
+                        '1753-01-01' as DATA_SCAD_PAG,
                         PARTITE.MAPAAPAR as ANNO_PARTITA,
                         PARTITE.MAPNRPAR as NR_PARTITA,
                         '0'as TRANPIVA,
@@ -323,6 +325,7 @@ class SaldiManager {
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
                     LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
+                    LEFT JOIN FINANCE.BBT02PT CAU on CAU.T01CD = S.T01CD and CAU.T02CD = '$CAU_CONTABILE'
                     LEFT JOIN (
                         SELECT P.T01CD, P.MAPAAPAR, P.MAPNRPAR, S.R_COMMESSA,
                             ROW_NUMBER()OVER(PARTITION BY R_COMMESSA ORDER BY MAPAAPAR DESC,MAPNRPAR DESC) AS NUM
@@ -330,7 +333,7 @@ class SaldiManager {
                         JOIN THIPPERS.YSTAT_FATVEN_V01 S on S.ID_AZIENDA = P.T01CD and P.MAPAAPAR = S.ANNO_FAT
                             and P.MAPNRPAR = S.NUMERO_FATTURA 
                         WHERE P.MAPSTAPA = 1 -- solo partite aperte
-                        ) PARTITE ON PARTITE.T01CD=S.T01CD and PARTITE.R_COMMESSA=S.GPD0CD and NUM=1
+                        ) PARTITE ON PARTITE.T01CD = S.T01CD and PARTITE.R_COMMESSA = S.GPD0CD and NUM = 1
                     WHERE S.T01CD = '$ID_AZIENDA'
                         and S.GT01CD = '$DATASET'
                         and S.GT02CD = '$SUBSET'
@@ -341,7 +344,8 @@ class SaldiManager {
                         and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                    GROUP BY S.T01CD,S.GPV0CD,S.GPD0CD,S.GAT0CD,S.GSL0AUCA,S.GSL0DUCA,PARTITE.MAPAAPAR,PARTITE.MAPNRPAR
+                    GROUP BY S.T01CD,S.GPV0CD,S.GPD0CD,S.GAT0CD,S.GSL0AUCA,S.GSL0DUCA,
+                        CAU.T02CD,CAU.T02DSNOR,PARTITE.MAPAAPAR,PARTITE.MAPNRPAR
                 UNION
                     SELECT
                         S.T01CD as COD_AZIENDA,
@@ -351,16 +355,16 @@ class SaldiManager {
                         '$NUMERATORE' as NUMERATORE,
                         DATEPART(yy, S.GAT0CD) as TRACPESE,
                         '3' as TRATPRIM,
-                        '$CAU_CONTABILE' as CAUSALE_CONTABILE,
-                        'Giroconto Ricavi' as TRADSCAU, -- teoricamente ricavabile da BBT02PT
+                        CAU.T02CD as CAUSALE_CONTABILE,
+                        CAU.T02DSNOR as TRADSCAU,
                         '' as TRADSAGG,
                         $decode_conto as COD_CONTO,
                         GETDATE() as DATA_REG,
-                        '0001-01-01' as DATA_OPERAZ,
-                        '0001-01-01' as DATA_IVA,
+                        '1753-01-01' as DATA_OPERAZ,
+                        '1753-01-01' as DATA_IVA,
                         GETDATE() as DATA_DOC,
-                        '0001-01-01' as DATA_VALUTA,
-                        '0001-01-01' as DATA_SCAD_PAG,
+                        '1753-01-01' as DATA_VALUTA,
+                        '1753-01-01' as DATA_SCAD_PAG,
                         PARTITE.MAPAAPAR as ANNO_PARTITA,
                         PARTITE.MAPNRPAR as NR_PARTITA,
                         '0'as TRANPIVA,
@@ -374,6 +378,7 @@ class SaldiManager {
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
                     LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
+                    LEFT JOIN FINANCE.BBT02PT CAU on CAU.T01CD = S.T01CD and CAU.T02CD = '$CAU_CONTABILE'
                     LEFT JOIN (
                         SELECT P.T01CD, P.MAPAAPAR, P.MAPNRPAR, S.R_COMMESSA,
                             ROW_NUMBER()OVER(PARTITION BY R_COMMESSA ORDER BY MAPAAPAR DESC,MAPNRPAR DESC) AS NUM
@@ -392,12 +397,16 @@ class SaldiManager {
                         and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                    GROUP BY S.T01CD,S.GPV0CD,S.GPD0CD,S.GAT0CD,S.GSL0AUCA,S.GSL0DUCA,PARTITE.MAPAAPAR,PARTITE.MAPNRPAR
+                    GROUP BY S.T01CD,S.GPV0CD,S.GPD0CD,S.GAT0CD,S.GSL0AUCA,S.GSL0DUCA,
+                        CAU.T02CD,CAU.T02DSNOR,PARTITE.MAPAAPAR,PARTITE.MAPNRPAR
                 ";
         $panthera->execute_update($query1);
 
 // FIXME PER FARE LA CONTABILITA' ANALITICA DOVREI GIA' AVERE IL NUM.REG. COGE !!!!
 
+        // GIPNPT ha un progressivo “univoco” (GIPNNATR) che va gestito riprendendolo e incrementandolo dal file GIPNNPT
+        $progressivo = select_single_value("SELECT GIPNLAST from FINANCE.GIPNNPT WHERE T01CD='$ID_AZIENDA'");
+        
         $query2 = "INSERT INTO FINANCE.GIPNPT(
                         GT01CD,     -- dataset
                         DIZSTATO,
@@ -512,7 +521,7 @@ class SaldiManager {
                         '$utente' as UTENTE_AGG,
                         CURRENT_DATE as DATA_AGG,
                         CURRENT_TIME as ORA_AGG,
-                        (ROW_NUMBER() OVER(ORDER BY S.T01CD)) * 2 as PROGRESSIVO,         -- GIPNPT ha un progressivo “univoco” (GIPNNATR) che va gestito riprendendolo e incrementandolo dal file GIPNNPT 
+                        $progressivo + (ROW_NUMBER() OVER(ORDER BY S.T01CD)) * 2 as PROGRESSIVO,
                         '$ORIGINE' as ORIGINE,
                         '$TP_NUMERATORE_AN' as TIPO_NUMERATORE,
                         S.T01CD as COD_AZIENDA,
@@ -524,13 +533,13 @@ class SaldiManager {
                         '' as ALIAS,
                         '$CAU_AN' as CAUSALE,
                         '$NUMERATORE' as TIPO_OPERAZIONE,
-                        '0001-01-01' as DATA_REG_ORIGINE,
+                        '1753-01-01' as DATA_REG_ORIGINE,
                         '' as NUMERO_DOC,
-                        '0001-01-01' as DATA_DOC,
+                        '1753-01-01' as DATA_DOC,
                         '' as ABBINAMENTO,
-                        '0001-01-01' as DATA_ABBINAMENTO,
-                        '0001-01-01' as DATA_INIZIO_COMPETENZA,
-                        '0001-01-01' as DATA_FINE_COMPETENZA,
+                        '1753-01-01' as DATA_ABBINAMENTO,
+                        '1753-01-01' as DATA_INIZIO_COMPETENZA,
+                        '1753-01-01' as DATA_FINE_COMPETENZA,
                         S.T01CD as COD_AZIENDA_ORIGINE,
                         S.GPV0CD as VOCE_CONTABILE,
                         CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END as COD_CLIENTE,
@@ -538,9 +547,9 @@ class SaldiManager {
                         '' as RIF_LIB1,
                         '' as RIF_LIB2,
                         '' as RIF_LIB3,
-                        '0001-01-01' as DATA_LIB1,
-                        '0001-01-01' as DATA_LIB2,
-                        '0001-01-01' as DATA_LIB3,
+                        '1753-01-01' as DATA_LIB1,
+                        '1753-01-01' as DATA_LIB2,
+                        '1753-01-01' as DATA_LIB3,
                         S.T36CD as COD_DIVISIONE,
                         S.GPV0CD as VOCE_GESTIONALE,
                         S.GPC0CD as CENTRO_COSTO,
@@ -566,10 +575,10 @@ class SaldiManager {
                         0 as QTY,
                         '1' as SEGNO,   -- Impostare uguale a segno di BETRAPT
                         '' as VALUTA,
-                        '0001-01-01' as DATA_CAMBIO_TRANSAZ,
+                        '1753-01-01' as DATA_CAMBIO_TRANSAZ,
                         '' as TIPO_CAMBIO_TRANSAZ,
                         1 as CAMBIO_TRANSAZ,
-                        '0001-01-01' as DATA_CAMBIO_GRP,
+                        '1753-01-01' as DATA_CAMBIO_GRP,
                         '' as TIPO_CAMBIO_GRP,
                         0 as CAMBIO_GRP,
                         '' as UNITA_MISURA,
@@ -595,8 +604,8 @@ class SaldiManager {
                         0 as UNITARIO_SERV3,
                         0 as UNITARIO_SERV4,
                         0 as UNITARIO_SERV5,
-                        0 as NUM_REG, -- come quello di BETRAPT ???
-                        0 as NUM_RIGA, -- come quello di BETRAPT ???
+                        $numReg as NUM_REG,
+                        0 as NUM_RIGA, -- come quello di BETRAPT !!!
                         '' as CHIAVE_ORIGINE,
                         '' as SEPARATORE,
                         '' as TIPO_ORIGINE,
@@ -604,10 +613,9 @@ class SaldiManager {
                         '' as TIPO_PERIODO,
                         0 as PROGR_ELAB,
                         '' as OGGETTO_APPLICATIVO,
-                        '0001-01-01' as DATA_ELAB,
+                        '1753-01-01' as DATA_ELAB,
                         '' as CHECK_ELABORATO,
                         '' as CHECK_DA_ELIMINARE
-                        -- DOVE IMPOSTARE ARTICOLO E ARTICOLO RIF ?
                     FROM FINANCE.GSL0PT S
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
@@ -638,6 +646,12 @@ ZZCONTR     901001      1           (blank)     (blank)     ZZCONTR
 */
 
             $panthera->execute_update($query2);
+
+            // non ho capito se devo o no aggiornare il progressivo su GIPNNPT:
+            // $query = "SELECT MAX(GIPNNATR) from FINANCE.GIPNPT WHERE T01CD='$ID_AZIENDA'";
+            // $last = $panthera->select_single_value($query);
+            // $query = "UPDATE FINANCE.GIPNNPT set GIPNLAST='$last' WHERE T01CD='$ID_AZIENDA'";
+            // $panthera->execute_update($query2);
     }
 }
 ?>
