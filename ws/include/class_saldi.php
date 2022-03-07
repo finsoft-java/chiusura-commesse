@@ -244,7 +244,7 @@ class SaldiManager {
             return;
         }
 
-        print_error(500, 'Funzione non implementata');
+        // print_error(500, 'Funzione non implementata');
 
         $conti_transitori_imploded = "'" . implode("','", array_keys($matrice_conti)) .  "'";
 
@@ -259,6 +259,12 @@ class SaldiManager {
         $numReg = select_single_value("SELECT NLAST from FINANCE.BETRANPT WHERE T01CD='$ID_AZIENDA'");
 
         $query1 = "INSERT INTO FINANCE.BETRAPT(
+                        DIZUTCRE,
+                        DIZDTCRE,
+                        DIZHHCRE,
+                        DIZUTAGG,
+                        DIZDTAGG,
+                        DIZHHAGG,
                         T01CD,      -- azienda
                         TRANUREG,   -- num.reg.
                         TRANRIRE,   -- num.riga
@@ -271,6 +277,7 @@ class SaldiManager {
                         T02CD,      -- causale contabile
                         TRADSCAU,   -- descr. causale contabile
                         TRADSAGG,   -- descr. aggiuntiva
+                        TRATCLFO,   -- tipo cli/for
                         VOCCD,      -- voce contabile
                         TRADTRCO,   -- data reg.
                         TRADTOPE,   -- data operazione
@@ -282,12 +289,13 @@ class SaldiManager {
                         TRANRPAR,   -- nr. rif. partita
                         TRANPIVA,   -- nr. protocollo IVA
                         TRATPVAL,   -- tipo valuta
-                        --MOVNAPAG,   -- natura pagamento
+                        --MOVNAPAG,   -- natura pagamento (rata)
+                        --TRATPPAG,   -- tipo pagamento (rata)
                         --TRACAMBVP -- cambio val. prim.     
                         --TRACAMBVS -- cambio val. sec.
                         --T05CD     -- assogg. IVA
-                        --T22CD     -- mod.pag.
-                        --TRATPPAG,   -- tipo pagamento
+                        T22CD     -- mod.pag.
+                        T29CD,      -- valuta
                         TRASEGNO,
                         TRAIMPVP,   -- importo in val. prim.
                         TRAIIVVP,   -- Imponibile IVA val primaria
@@ -295,16 +303,23 @@ class SaldiManager {
                         MOVT62CD    -- Commessa_REF
                         )
                     SELECT
+                        '$utente' as UTENTE_CRZ,
+                        CURRENT_DATE as DATA_CRZ,
+                        CURRENT_TIME as ORA_CRZ,
+                        '$utente' as UTENTE_AGG,
+                        CURRENT_DATE as DATA_AGG,
+                        CURRENT_TIME as ORA_AGG,
                         S.T01CD as COD_AZIENDA,
                         $numReg as NUM_REG,
                         (ROW_NUMBER() OVER(ORDER BY S.T01CD)) * 2 - 1 as NUM_RIGA,
                         '1' as STATO,
                         '$NUMERATORE' as NUMERATORE,
-                        DATEPART(yy, S.GAT0CD) as TRACPESE,
+                        '1' as TRACPESE,
                         '3' as TRATPRIM,
-                        CAU.T02CD as CAUSALE_CONTABILE,
-                        CAU.T02DSNOR as TRADSCAU,
+                        '$CAU_CONTABILE' as CAUSALE_CONTABILE,
+                        '' as TRADSCAU,
                         '' as TRADSAGG,
+                        '' as TIPO_CLIFOR,
                         S.GPV0CD as COD_CONTO,
                         GETDATE() as DATA_REG,
                         '1753-01-01' as DATA_OPERAZ,
@@ -316,6 +331,8 @@ class SaldiManager {
                         PARTITE.MAPNRPAR as NR_PARTITA,
                         '0'as TRANPIVA,
                         '1' as TRATPVAL,
+                        '' as MOD_PAG,
+                        '' as VALUTA,
                         '1' as TRASEGNO,
                         (S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,
                         '0' as TRAIIVVP,
@@ -325,7 +342,6 @@ class SaldiManager {
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
                     LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
-                    LEFT JOIN FINANCE.BBT02PT CAU on CAU.T01CD = S.T01CD and CAU.T02CD = '$CAU_CONTABILE'
                     LEFT JOIN (
                         SELECT P.T01CD, P.MAPAAPAR, P.MAPNRPAR, S.R_COMMESSA,
                             ROW_NUMBER()OVER(PARTITION BY R_COMMESSA ORDER BY MAPAAPAR DESC,MAPNRPAR DESC) AS NUM
@@ -348,16 +364,23 @@ class SaldiManager {
                         CAU.T02CD,CAU.T02DSNOR,PARTITE.MAPAAPAR,PARTITE.MAPNRPAR
                 UNION
                     SELECT
+                        '$utente' as UTENTE_CRZ,
+                        CURRENT_DATE as DATA_CRZ,
+                        CURRENT_TIME as ORA_CRZ,
+                        '$utente' as UTENTE_AGG,
+                        CURRENT_DATE as DATA_AGG,
+                        CURRENT_TIME as ORA_AGG,
                         S.T01CD as COD_AZIENDA,
                         0 as NUM_REG,
                         (ROW_NUMBER() OVER(ORDER BY S.T01CD)) * 2 as NUM_RIGA,
                         '1' as STATO,
                         '$NUMERATORE' as NUMERATORE,
-                        DATEPART(yy, S.GAT0CD) as TRACPESE,
+                        '1' as TRACPESE,
                         '3' as TRATPRIM,
-                        CAU.T02CD as CAUSALE_CONTABILE,
-                        CAU.T02DSNOR as TRADSCAU,
+                        '$CAU_CONTABILE' as CAUSALE_CONTABILE,
+                        '' as TRADSCAU,
                         '' as TRADSAGG,
+                        '' as TIPO_CLIFOR,
                         $decode_conto as COD_CONTO,
                         GETDATE() as DATA_REG,
                         '1753-01-01' as DATA_OPERAZ,
@@ -369,6 +392,8 @@ class SaldiManager {
                         PARTITE.MAPNRPAR as NR_PARTITA,
                         '0'as TRANPIVA,
                         '1' as TRATPVAL,
+                        '' as MOD_PAG,
+                        '' as VALUTA,
                         '2' as TRASEGNO,
                         (S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,
                         '0' as TRAIIVVP,
@@ -378,7 +403,6 @@ class SaldiManager {
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
                     LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
-                    LEFT JOIN FINANCE.BBT02PT CAU on CAU.T01CD = S.T01CD and CAU.T02CD = '$CAU_CONTABILE'
                     LEFT JOIN (
                         SELECT P.T01CD, P.MAPAAPAR, P.MAPNRPAR, S.R_COMMESSA,
                             ROW_NUMBER()OVER(PARTITION BY R_COMMESSA ORDER BY MAPAAPAR DESC,MAPNRPAR DESC) AS NUM
