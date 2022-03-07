@@ -238,13 +238,11 @@ class SaldiManager {
     function preparaGiroconto($codCommessa) {
         global $panthera, $logged_user, $ID_AZIENDA, $DATASET, $SUBSET, $NUMERATORE,
             $CAU_CONTABILE, $ORIGINE, $TP_NUMERATORE_AN, $NUMERATORE_AN, $EVENTO,
-            $CENTRO_COSTO_AN, $CONTO_Z, $CENTRO_COSTO_Z;
+            $CENTRO_COSTO_AN, $CONTO_Z, $CENTRO_COSTO_Z, $matrice_conti;
         
         if ($panthera->mock) {
             return;
         }
-
-        // print_error(500, 'Funzione non implementata');
 
         $conti_transitori_imploded = "'" . implode("','", array_keys($matrice_conti)) .  "'";
 
@@ -258,6 +256,9 @@ class SaldiManager {
 
         $numReg = select_single_value("SELECT NLAST from FINANCE.BETRANPT WHERE T01CD='$ID_AZIENDA'");
 
+        // Questo serve per evitare gli errori di troncamento!
+        $panthera->execute_update("SET ANSI_WARNINGS  OFF");
+
         $query1 = "INSERT INTO FINANCE.BETRAPT(
                         DIZUTCRE,
                         DIZDTCRE,
@@ -268,8 +269,8 @@ class SaldiManager {
                         T01CD,      -- azienda
                         TRANUREG,   -- num.reg.
                         TRANRIRE,   -- num.riga
-                        --TRANPRGT,   -- num progressivo (per imm. massa?)
-                        --WTRNRLOG,   -- nr. log (per imm. massa?)
+                        TRANPRGT,   -- num progressivo (per imm. massa?)
+                        WTRNRLOG,   -- nr. log (per imm. massa?)
                         TRASTATO,
                         T09CD,      -- numeratore
                         TRACPESE,   -- esercizio
@@ -294,24 +295,27 @@ class SaldiManager {
                         --TRACAMBVP -- cambio val. prim.     
                         --TRACAMBVS -- cambio val. sec.
                         --T05CD     -- assogg. IVA
-                        T22CD     -- mod.pag.
+                        T22CD,      -- mod.pag.
                         T29CD,      -- valuta
                         TRASEGNO,
                         TRAIMPVP,   -- importo in val. prim.
                         TRAIIVVP,   -- Imponibile IVA val primaria
                         TRAIVAVP,   -- Imposta IVA val primaria
-                        MOVT62CD    -- Commessa_REF
+                        MOVT62CD,   -- Commessa_REF
+                        T97CD
                         )
                     SELECT
                         '$utente' as UTENTE_CRZ,
-                        CURRENT_DATE as DATA_CRZ,
-                        CURRENT_TIME as ORA_CRZ,
+                        GETDATE() as DATA_CRZ,
+                        CONVERT(TIME, GETDATE()) as ORA_CRZ,
                         '$utente' as UTENTE_AGG,
-                        CURRENT_DATE as DATA_AGG,
-                        CURRENT_TIME as ORA_AGG,
-                        S.T01CD as COD_AZIENDA,
+                        GETDATE() as DATA_AGG,
+                        CONVERT(TIME, GETDATE()) as ORA_AGG,
+                        RTRIM(S.T01CD) as COD_AZIENDA,
                         $numReg as NUM_REG,
                         (ROW_NUMBER() OVER(ORDER BY S.T01CD)) * 2 - 1 as NUM_RIGA,
+                        0 as TRANPRGT,
+                        0 as WTRNRLOG,
                         '1' as STATO,
                         '$NUMERATORE' as NUMERATORE,
                         '1' as TRACPESE,
@@ -320,15 +324,15 @@ class SaldiManager {
                         '' as TRADSCAU,
                         '' as TRADSAGG,
                         '' as TIPO_CLIFOR,
-                        S.GPV0CD as COD_CONTO,
+                        RTRIM(S.GPV0CD) as COD_CONTO,
                         GETDATE() as DATA_REG,
                         '1753-01-01' as DATA_OPERAZ,
                         '1753-01-01' as DATA_IVA,
                         GETDATE() as DATA_DOC,
                         '1753-01-01' as DATA_VALUTA,
                         '1753-01-01' as DATA_SCAD_PAG,
-                        PARTITE.MAPAAPAR as ANNO_PARTITA,
-                        PARTITE.MAPNRPAR as NR_PARTITA,
+                        RTRIM(PARTITE.MAPAAPAR) as ANNO_PARTITA,
+                        RTRIM(PARTITE.MAPNRPAR) as NR_PARTITA,
                         '0'as TRANPIVA,
                         '1' as TRATPVAL,
                         '' as MOD_PAG,
@@ -337,7 +341,8 @@ class SaldiManager {
                         (S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,
                         '0' as TRAIIVVP,
                         '0' as TRAIVAVP,
-                        S.GPD0CD as MOVT62CD
+                        RTRIM(S.GPD0CD) as MOVT62CD,
+                        '' as T97CD
                     FROM FINANCE.GSL0PT S
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
@@ -361,18 +366,20 @@ class SaldiManager {
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
                     GROUP BY S.T01CD,S.GPV0CD,S.GPD0CD,S.GAT0CD,S.GSL0AUCA,S.GSL0DUCA,
-                        CAU.T02CD,CAU.T02DSNOR,PARTITE.MAPAAPAR,PARTITE.MAPNRPAR
+                        PARTITE.MAPAAPAR,PARTITE.MAPNRPAR
                 UNION
                     SELECT
                         '$utente' as UTENTE_CRZ,
-                        CURRENT_DATE as DATA_CRZ,
-                        CURRENT_TIME as ORA_CRZ,
+                        GETDATE() as DATA_CRZ,
+                        CONVERT(TIME, GETDATE()) as ORA_CRZ,
                         '$utente' as UTENTE_AGG,
-                        CURRENT_DATE as DATA_AGG,
-                        CURRENT_TIME as ORA_AGG,
-                        S.T01CD as COD_AZIENDA,
-                        0 as NUM_REG,
+                        GETDATE() as DATA_AGG,
+                        CONVERT(TIME, GETDATE()) as ORA_AGG,
+                        RTRIM(S.T01CD) as COD_AZIENDA,
+                        $numReg as NUM_REG,
                         (ROW_NUMBER() OVER(ORDER BY S.T01CD)) * 2 as NUM_RIGA,
+                        0 as TRANPRGT,
+                        0 as WTRNRLOG,
                         '1' as STATO,
                         '$NUMERATORE' as NUMERATORE,
                         '1' as TRACPESE,
@@ -388,8 +395,8 @@ class SaldiManager {
                         GETDATE() as DATA_DOC,
                         '1753-01-01' as DATA_VALUTA,
                         '1753-01-01' as DATA_SCAD_PAG,
-                        PARTITE.MAPAAPAR as ANNO_PARTITA,
-                        PARTITE.MAPNRPAR as NR_PARTITA,
+                        RTRIM(PARTITE.MAPAAPAR) as ANNO_PARTITA,
+                        RTRIM(PARTITE.MAPNRPAR) as NR_PARTITA,
                         '0'as TRANPIVA,
                         '1' as TRATPVAL,
                         '' as MOD_PAG,
@@ -398,7 +405,8 @@ class SaldiManager {
                         (S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,
                         '0' as TRAIIVVP,
                         '0' as TRAIVAVP,
-                        S.GPD0CD as MOVT62CD
+                        S.GPD0CD as MOVT62CD,
+                        '' as T97CD
                     FROM FINANCE.GSL0PT S
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
@@ -422,15 +430,14 @@ class SaldiManager {
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
                     GROUP BY S.T01CD,S.GPV0CD,S.GPD0CD,S.GAT0CD,S.GSL0AUCA,S.GSL0DUCA,
-                        CAU.T02CD,CAU.T02DSNOR,PARTITE.MAPAAPAR,PARTITE.MAPNRPAR
+                        PARTITE.MAPAAPAR,PARTITE.MAPNRPAR
                 ";
-        $panthera->execute_update($query1);
 
-// FIXME PER FARE LA CONTABILITA' ANALITICA DOVREI GIA' AVERE IL NUM.REG. COGE !!!!
+       $panthera->execute_update($query1);
 
         // GIPNPT ha un progressivo “univoco” (GIPNNATR) che va gestito riprendendolo e incrementandolo dal file GIPNNPT
         $progressivo = select_single_value("SELECT GIPNLAST from FINANCE.GIPNNPT WHERE T01CD='$ID_AZIENDA'");
-        
+
         $query2 = "INSERT INTO FINANCE.GIPNPT(
                         GT01CD,     -- dataset
                         DIZSTATO,
@@ -451,7 +458,6 @@ class SaldiManager {
                         GEV0CD,     -- Evento
                         GC28CD,     -- Alias
                         GT11CD,     -- Causale
-                        GT09CD,     -- tipo operazione (numeratore?)
                         GIPNRFOR,   -- nr rif Origine
                         GIPNDTOR,   -- data origine
                         GIPNRIFE,   -- nr rif. doc
@@ -540,11 +546,11 @@ class SaldiManager {
                         '$DATASET' as DATASET,
                         '1' as STATO,
                         '$utente' as UTENTE_CRZ,
-                        CURRENT_DATE as DATA_CRZ,
-                        CURRENT_TIME as ORA_CRZ,
+                        GETDATE() as DATA_CRZ,
+                        CONVERT(TIME, GETDATE()) as ORA_CRZ,
                         '$utente' as UTENTE_AGG,
-                        CURRENT_DATE as DATA_AGG,
-                        CURRENT_TIME as ORA_AGG,
+                        GETDATE() as DATA_AGG,
+                        CONVERT(TIME, GETDATE()) as ORA_AGG,
                         $progressivo + (ROW_NUMBER() OVER(ORDER BY S.T01CD)) * 2 as PROGRESSIVO,
                         '$ORIGINE' as ORIGINE,
                         '$TP_NUMERATORE_AN' as TIPO_NUMERATORE,
@@ -556,7 +562,8 @@ class SaldiManager {
                         '$EVENTO' as EVENTO,
                         '' as ALIAS,
                         '$CAU_AN' as CAUSALE,
-                        '$NUMERATORE' as TIPO_OPERAZIONE,
+                        --'$NUMERATORE' as ???,
+                        '' as NR_RIF_ORIGINE,
                         '1753-01-01' as DATA_REG_ORIGINE,
                         '' as NUMERO_DOC,
                         '1753-01-01' as DATA_DOC,
@@ -676,6 +683,8 @@ ZZCONTR     901001      1           (blank)     (blank)     ZZCONTR
             // $last = $panthera->select_single_value($query);
             // $query = "UPDATE FINANCE.GIPNNPT set GIPNLAST='$last' WHERE T01CD='$ID_AZIENDA'";
             // $panthera->execute_update($query2);
+
+            $panthera->execute_update("SET ANSI_WARNINGS  ON");
     }
 }
 ?>
