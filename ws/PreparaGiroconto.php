@@ -17,7 +17,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($codCommessa == null) {
         print_error(400, "Missing codCommessa");
     }
-    [$list, $count] = $saldiManager->preparaGiroconto($codCommessa);
+    $numReg = $saldiManager->preparaGiroconto($codCommessa);
+          
+    header('Content-Type: application/json');
+    echo json_encode(['value' => ['numRegistrazione' => $numReg]]);
     
 } else {
     //==========================================================
