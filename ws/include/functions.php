@@ -83,6 +83,13 @@ function print_error($http_err_code, $msg) {
     die();
 }
 
+// Questa viene richiamata per tutte le eccezioni non trappate, che altrimenti darebbero un errore 500 senza messaggi
+function exception_handler($exception) {
+    print_error(500, "Errore interno. " . $exception->getMessage());
+}
+
+set_exception_handler('exception_handler');
+
 /**
 * Esegue un comado SQL SELECT e lo ritorna come array di oggetti, oppure lancia un print_error
 */
