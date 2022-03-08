@@ -8,7 +8,7 @@ class SaldiManager {
     
 
     function getVistaCruscotto($codCommessa='') {
-        global $matrice_conti, $panthera, $ID_AZIENDA, $DATASET, $SUBSET, $STATO_WF_START;
+        global $matrice_conti, $panthera, $ID_AZIENDA, $DATASET, $SUBSET, $STATO_WF_START, $CENTRO_COSTO;
 
         if ($panthera->mock) {
             $objects = [ [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Implementazione su Linea a Banchi', 'COD_CLIENTE' => '006416','CLI_RA_SOC'=>'BREMBO SPA','COD_DIVISIONE' => 'AUT', 'TOT_FATTURATO' => 50000, 'SALDO_CONTO_TRANSITORIO' => 50000 , 'SALDO_CONTO_RICAVI' => 0.0, 'CONTO_TRANSITORIO' => '606004' ],
@@ -57,8 +57,9 @@ class SaldiManager {
                     WHERE S.T01CD = '$ID_AZIENDA'
                         and S.GT01CD = '$DATASET'
                         and S.GT02CD = '$SUBSET'
-                        and S.GSL0TPSL = 1
+                        and S.GSL0TPSL = '1'
                         and S.GS02CD = '*****'
+                        and S.GPC0CD = '$CENTRO_COSTO'
                         and DATEPART(yy, S.GAT0CD) > 2020     -- paracadute
                         and S.GPV0CD not like 'ZZ%'           -- contropartita
                         and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
@@ -254,8 +255,8 @@ class SaldiManager {
 
         $utente = $logged_user->nome_utente . '_' . $ID_AZIENDA;
 
-        $panthera->execute_update("UPDATE FINANCE.BETRANPT SET NLAST=NLAST+1 WHERE T01CD='$ID_AZIENDA'");
-        $numReg = $panthera->select_single_value("SELECT NLAST from FINANCE.BETRANPT WHERE T01CD='$ID_AZIENDA'");
+        $panthera->execute_update("UPDATE FINANCE.BETRANPT SET TRANULST=TRANULST+1 WHERE T01CD='$ID_AZIENDA' and T97CD=''");
+        $numReg = $panthera->select_single_value("SELECT TRANULST from FINANCE.BETRANPT WHERE T01CD='$ID_AZIENDA' and T97CD=''");
 
         // Questo serve per evitare gli errori di troncamento!
         $panthera->execute_update("SET ANSI_WARNINGS  OFF");
@@ -437,7 +438,7 @@ class SaldiManager {
        $panthera->execute_update($query1);
 
         // GIPNPT ha un progressivo “univoco” (GIPNNATR) che va gestito riprendendolo e incrementandolo dal file GIPNNPT
-        $progressivo = $panthera->select_single_value("SELECT GIPNLAST from FINANCE.GIPNNPT WHERE T01CD='$ID_AZIENDA'");
+        $progressivo = $panthera->select_single_value("SELECT GIPNLAST from FINANCE.GIPNNPT");
 
         $query2 = "INSERT INTO FINANCE.GIPNPT(
                         GT01CD,     -- dataset
@@ -1043,9 +1044,9 @@ ZZCONTR     901001      1           (blank)     (blank)     ZZCONTR
             $panthera->execute_update($query2);
 
             // non ho capito se devo o no aggiornare il progressivo su GIPNNPT:
-            $query = "SELECT MAX(GIPNNATR) from FINANCE.GIPNPT WHERE T01CD='$ID_AZIENDA'";
+            $query = "SELECT MAX(GIPNNATR) from FINANCE.GIPNPT";
             $last = $panthera->select_single_value($query);
-            $query = "UPDATE FINANCE.GIPNNPT set GIPNLAST='$last' WHERE T01CD='$ID_AZIENDA'";
+            $query = "UPDATE FINANCE.GIPNNPT set GIPNLAST='$last'";
             $panthera->execute_update($query);
 
             $panthera->execute_update("SET ANSI_WARNINGS  ON");
