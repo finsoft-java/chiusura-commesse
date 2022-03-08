@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { Router } from '@angular/router';
 import { VistaCruscotto } from '../_models';
@@ -11,7 +11,7 @@ import { CruscottoService } from '../_services/cruscotto.service';
   templateUrl: './cruscotto.component.html',
   styleUrls: ['./cruscotto.component.css']
 })
-export class CruscottoComponent implements OnInit {
+export class CruscottoComponent implements OnInit, OnDestroy {
   displayedColumns: string[] = ['commessa', 'divisione', 'cliente', 'fatturato',
     'contoTransitorio', 'saldoTr', 'contoRicavi', 'saldoRicavi', 'warning', 'actions'];
   dataSource = new MatTableDataSource<VistaCruscotto>();
@@ -24,6 +24,7 @@ export class CruscottoComponent implements OnInit {
     'Verificare conto'
   ];
   REFRESH_DELAY = 60; // refresh every REFRESH_DELAY seconds
+  timer?: number;
 
   constructor(private router: Router,
     private svc: CruscottoService,
@@ -33,9 +34,13 @@ export class CruscottoComponent implements OnInit {
 
   ngOnInit(): void {
     this.getAll();
-    setInterval(() => {
+    this.timer = window.setInterval(() => {
       this.getAll();
     }, this.REFRESH_DELAY * 1000);
+  }
+
+  ngOnDestroy(): void {
+    window.clearInterval(this.timer);
   }
 
   getAll(): void {
