@@ -277,6 +277,9 @@ function print_query_html($records) {
             $s .= "<tr>";
             foreach ($columns as $c) {
                 $value = $r[$c];
+                if ($value === null) {
+                    $value = "(null)";
+                }
                 if (get_class($value) == 'DateTime') {
                     $value = $value->format('Y-m-d H:i:s');
                 }
