@@ -239,7 +239,7 @@ class SaldiManager {
     function preparaGiroconto($codCommessa) {
         global $panthera, $logged_user, $ID_AZIENDA, $DATASET, $SUBSET, $NUMERATORE,
             $CAU_CONTABILE, $ORIGINE, $TP_NUMERATORE_AN, $NUMERATORE_AN, $EVENTO,
-            $CENTRO_COSTO_AN, $CONTO_Z, $CENTRO_COSTO_Z, $matrice_conti;
+            $CENTRO_COSTO, $CENTRO_COSTO_AN, $CONTO_Z, $CENTRO_COSTO_Z, $matrice_conti;
         
         if ($panthera->mock) {
             return;
@@ -268,7 +268,7 @@ class SaldiManager {
                         DIZUTAGG,
                         DIZDTAGG,
                         DIZHHAGG,
-                        TRAORIGI,
+                        TRAORIGI,   -- origine
                         T96CD,      -- utente
                         T01CD,      -- azienda
                         TRANUREG,   -- num.reg.
@@ -394,7 +394,7 @@ class SaldiManager {
                         and S.GSL0TPSL = 1
                         and S.GS02CD = '*****'
                         and S.GPV0CD not like 'ZZ%'
-                        --and S.GPC0CD = '$CENTRO_COSTO'
+                        and S.GPC0CD = '$CENTRO_COSTO'
                         and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
@@ -465,7 +465,7 @@ class SaldiManager {
                         and S.GSL0TPSL = 1
                         and S.GS02CD = '*****'
                         and S.GPV0CD not like 'ZZ%'
-                        --and S.GPC0CD = '$CENTRO_COSTO'
+                        and S.GPC0CD = '$CENTRO_COSTO'
                         and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
