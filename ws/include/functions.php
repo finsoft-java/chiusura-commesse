@@ -259,6 +259,34 @@ function insert_select($table, $lista_tutte_le_colonne, $mappa_valori_da_modific
     return $sql;
 }
 
+function print_query_html($records) {
+    $s = "<table border=1>\r\n";
+    if ($records && count($records) > 0 && count($records[0] > 0)) {
+        $columns = array_keys($records[0]);
+        foreach ($columns as $id => $c) {
+            if (is_int($c)) {
+                unset($columns[$id]);
+            }
+        }
+        $s .= "<thead style='font-weight: bold'><tr>";
+        foreach ($columns as $c) {
+            $s .= "<td>$c</td>";
+        }
+        $s .= "</tr></thead>\r\n<tbody>\r\n";
+        foreach ($records as $r) {
+            $s .= "<tr>";
+            foreach ($columns as $c) {
+                $s .= "<td>" . $r[$c] . "</td>";
+            }
+            $s .= "</tr>\r\n";
+        }
+    } else {
+        $s .= "<tr><td>No data found.</td></tr>\r\n";
+    }
+    $s .= "</tbody>\r\n</table>\r\n";
+    return $s;
+}
+
 /**
  * Create a map with given keys, whose values are $array elements
  * 
