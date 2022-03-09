@@ -276,7 +276,11 @@ function print_query_html($records) {
         foreach ($records as $r) {
             $s .= "<tr>";
             foreach ($columns as $c) {
-                $s .= "<td>" . $r[$c] . "</td>";
+                $value = $r[$c];
+                if (get_class($value) == 'DateTime') {
+                    $value = $value->format('Y-m-d H:i:s');
+                }
+                $s .= "<td>" . $value . "</td>";
             }
             $s .= "</tr>\r\n";
         }
