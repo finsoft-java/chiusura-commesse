@@ -274,7 +274,7 @@ class SaldiManager {
                         TRANUREG,   -- num.reg.
                         TRANRIRE,   -- num.riga
                         TRANPRGT,   -- num progressivo (per imm. massa?)
-                        WTRNRLOG,   -- nr. log (per imm. massa?)
+                        WTRNRLOG,   -- nr. log (viene valorizzato dall'immissione di massa)
                         TRASTATO,
                         T09CD,      -- numeratore
                         TRACPESE,   -- esercizio
@@ -322,8 +322,8 @@ class SaldiManager {
                         TRANRARI,
                         TRANRESC,
                         TRANRCIS,
-                        TRANREGG,      -- ???
-                        TRANRIGG,      -- ???
+                        TRANREGG,      -- nr. registrazione (viene valorizzato dall'immissione di massa)
+                        TRANRIGG,      -- nr. riga (viene valorizzato dall'immissione di massa)
                         -- campi da valorizzare a blank:
                         T15CD,CLICD,FORCD,T16CD,T17CD,TRASCAVI,TRANDORI,TRANUPRA,T36CD,T30CD,
                         TRASOFAC,T07CD,T06CD,T05CD,MOVNAPAG,TRATPPAG,TRATPEFF,TRATPELE,T40CD,T44CD,
@@ -341,7 +341,7 @@ class SaldiManager {
                         '$utente' as T96CD,
                         RTRIM(S.T01CD) as COD_AZIENDA,
                         $numReg as NUM_REG,
-                        (ROW_NUMBER() OVER(ORDER BY S.T01CD)) * 2 - 1 as NUM_RIGA,
+                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.GPV0CD)) * 2 - 1 as NUM_RIGA,
                         0 as TRANPRGT,
                         0 as WTRNRLOG,
                         '1' as STATO,
@@ -366,7 +366,7 @@ class SaldiManager {
                         '' as MOD_PAG,
                         '' as VALUTA,
                         '1' as TRASEGNO,
-                        (S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,
+                        SUM(S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,
                         '0' as TRAIIVVP,
                         '0' as TRAIVAVP,
                         RTRIM(S.GPD0CD) as MOVT62CD,
@@ -398,7 +398,7 @@ class SaldiManager {
                         and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                    GROUP BY S.T01CD,S.GPV0CD,S.GPD0CD,S.GAT0CD,S.GSL0AUCA,S.GSL0DUCA,
+                    GROUP BY S.T01CD,S.GPV0CD,S.GPD0CD,S.GAT0CD,
                         PARTITE.MAPAAPAR,PARTITE.MAPNRPAR
                 UNION
                     SELECT
@@ -412,7 +412,7 @@ class SaldiManager {
                         '$utente' as T96CD,
                         RTRIM(S.T01CD) as COD_AZIENDA,
                         $numReg as NUM_REG,
-                        (ROW_NUMBER() OVER(ORDER BY S.T01CD)) * 2 as NUM_RIGA,
+                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.GPV0CD)) * 2 as NUM_RIGA,
                         0 as TRANPRGT,
                         0 as WTRNRLOG,
                         '1' as STATO,
@@ -437,7 +437,7 @@ class SaldiManager {
                         '' as MOD_PAG,
                         '' as VALUTA,
                         '2' as TRASEGNO,
-                        (S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,
+                        MAX(S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,
                         '0' as TRAIIVVP,
                         '0' as TRAIVAVP,
                         S.GPD0CD as MOVT62CD,
@@ -469,7 +469,7 @@ class SaldiManager {
                         and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                    GROUP BY S.T01CD,S.GPV0CD,S.GPD0CD,S.GAT0CD,S.GSL0AUCA,S.GSL0DUCA,
+                    GROUP BY S.T01CD,S.GPV0CD,S.GPD0CD,S.GAT0CD,
                         PARTITE.MAPAAPAR,PARTITE.MAPNRPAR
                 ";
 
@@ -572,12 +572,12 @@ class SaldiManager {
                         GIPNUNI5,
                         GIPNNAOR,       -- Numero assoluto Origine
                         GIPNPROR,       -- Riga origine
-                        GIPNA256,       -- Criterio accorpamento
+                        GIPNA256,       -- Criterio accorpamento (viene valorizzato dall'immissione di massa)
                         GIPNSEPA,       -- carattere separatore
                         GIPNTIOR,       -- Tipo Origine
                         GIPNTPIN,       -- Tipo Inserimento
                         GIPNTPPE,       -- Tipo Periodo
-                        GIPNNLOG,       -- prog.elab.
+                        GIPNNLOG,       -- prog.elab. (viene valorizzato dall'immissione di massa)
                         T97CD,          -- Oggetto applicativo
                         GIPNDTEL,       -- DT Elaborazione
                         GIPNCHC1,       -- Check Elaborato
@@ -676,7 +676,7 @@ class SaldiManager {
                         0 as UNITARIO_SERV4,
                         0 as UNITARIO_SERV5,
                         $numReg as NUM_REG,
-                        0 as NUM_RIGA, -- come quello di BETRAPT !!!
+                        (ROW_NUMBER() OVER(PARTITION BY S.T01CD,S.GPV0CD ORDER BY S.T01CD,S.GPV0CD,S.GAT0CD)) * 2 - 1 as NUM_RIGA, -- come quello di BETRAPT !!!
                         '' as CHIAVE_ORIGINE,
                         '' as SEPARATORE,
                         '' as TIPO_ORIGINE,
@@ -745,19 +745,19 @@ class SaldiManager {
                         S.T36CD as COD_DIVISIONE,
                         '$CONTO_Z' as VOCE_GESTIONALE,
                         '$CENTRO_COSTO_Z' as CENTRO_COSTO,
-                        S.GPD0CD as COD_COMMESSA,
+                        '' as COD_COMMESSA,
                         '' as SEGM1,
-                        S.GPS2CD as SEGM2,
-                        S.GPS3CD as SEGM3,
+                        '' as SEGM2,
+                        '' as SEGM3,
                         '' as SEGM4,
                         '' as SEGM5,
                         S.T36CD as COD_DIVISIONE_PQ,
                         S.GPV0CD as VOCE_CONTABILE_PQ,
                         S.GPC0CD as CENTRO_COSTO_PQ,
-                        S.GPD0CD as COD_COMMESSA_PQ,
+                        '' as COD_COMMESSA_PQ,
                         '' as SEGM1_PQ,
-                        S.GPS2CD as SEGM2_PQ,
-                        S.GPS3CD as SEGM3_PQ,
+                        '' as SEGM2_PQ,
+                        '' as SEGM3_PQ,
                         '' as SEGM4_PQ,
                         '' as SEGM5_PQ,
                         'Giroconto Ricavi' as GIPN_DESCRIZIONE,     -- teoricamente ricavabile da ????
@@ -797,7 +797,7 @@ class SaldiManager {
                         0 as UNITARIO_SERV4,
                         0 as UNITARIO_SERV5,
                         $numReg as NUM_REG,
-                        0 as NUM_RIGA, -- come quello di BETRAPT !!!
+                        (ROW_NUMBER() OVER(PARTITION BY S.T01CD,S.GPV0CD ORDER BY S.T01CD,S.GPV0CD,S.GAT0CD)) * 2 - 1 as NUM_RIGA, -- come quello di BETRAPT !!!
                         '' as CHIAVE_ORIGINE,
                         '' as SEPARATORE,
                         '' as TIPO_ORIGINE,
@@ -918,7 +918,7 @@ class SaldiManager {
                         0 as UNITARIO_SERV4,
                         0 as UNITARIO_SERV5,
                         $numReg as NUM_REG,
-                        0 as NUM_RIGA, -- come quello di BETRAPT !!!
+                        (ROW_NUMBER() OVER(PARTITION BY S.T01CD,S.GPV0CD ORDER BY S.T01CD,S.GPV0CD,S.GAT0CD)) * 2 as NUM_RIGA, -- come quello di BETRAPT !!!
                         '' as CHIAVE_ORIGINE,
                         '' as SEPARATORE,
                         '' as TIPO_ORIGINE,
@@ -987,19 +987,19 @@ class SaldiManager {
                         S.T36CD as COD_DIVISIONE,
                         '$CONTO_Z' as VOCE_GESTIONALE,
                         '$CENTRO_COSTO_Z' as CENTRO_COSTO,
-                        S.GPD0CD as COD_COMMESSA,
+                        '' as COD_COMMESSA,
                         '' as SEGM1,
-                        S.GPS2CD as SEGM2,
-                        S.GPS3CD as SEGM3,
+                        '' as SEGM2,
+                        '' as SEGM3,
                         '' as SEGM4,
                         '' as SEGM5,
                         S.T36CD as COD_DIVISIONE_PQ,
                         S.GPV0CD as VOCE_CONTABILE_PQ,
                         S.GPC0CD as CENTRO_COSTO_PQ,
-                        S.GPD0CD as COD_COMMESSA_PQ,
+                        '' as COD_COMMESSA_PQ,
                         '' as SEGM1_PQ,
-                        S.GPS2CD as SEGM2_PQ,
-                        S.GPS3CD as SEGM3_PQ,
+                        '' as SEGM2_PQ,
+                        '' as SEGM3_PQ,
                         '' as SEGM4_PQ,
                         '' as SEGM5_PQ,
                         'Giroconto Ricavi' as GIPN_DESCRIZIONE,     -- teoricamente ricavabile da ????
@@ -1039,7 +1039,7 @@ class SaldiManager {
                         0 as UNITARIO_SERV4,
                         0 as UNITARIO_SERV5,
                         $numReg as NUM_REG,
-                        0 as NUM_RIGA, -- come quello di BETRAPT !!!
+                        (ROW_NUMBER() OVER(PARTITION BY S.T01CD,S.GPV0CD ORDER BY S.T01CD,S.GPV0CD,S.GAT0CD)) * 2 as NUM_RIGA, -- come quello di BETRAPT !!!
                         '' as CHIAVE_ORIGINE,
                         '' as SEPARATORE,
                         '' as TIPO_ORIGINE,
