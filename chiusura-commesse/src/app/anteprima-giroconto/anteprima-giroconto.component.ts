@@ -48,13 +48,13 @@ export class AnteprimaGirocontoComponent implements OnInit {
     data.push({
       CONTO: x.CONTO_RICAVI,
       DES_CONTO: x.DES_CONTO_RICAVI,
-      VERSO: 'AVERE',
+      SEGNO: 'AVERE',
       IMPORTO: x.SALDO_CONTO_TRANSITORIO
     });
     data.push({
       CONTO: x.CONTO_TRANSITORIO,
       DES_CONTO: x.DES_CONTO_TRANSITORIO,
-      VERSO: 'DARE',
+      SEGNO: 'DARE',
       IMPORTO: x.SALDO_CONTO_TRANSITORIO
     });
 
@@ -67,10 +67,10 @@ export class AnteprimaGirocontoComponent implements OnInit {
     l.forEach(x => {
       // considero solamente le righe dei conti transitori
       if (x.TIPO_CONTO === 'TRANSITORIO' && x.CONTO_RICAVI) {
-        const r: RigaContoAnalitica = {
+        const r1: RigaContoAnalitica = {
           CONTO: x.COD_CONTO,
           DES_CONTO: x.DES_CONTO,
-          VERSO: 'AVERE',
+          SEGNO: 'AVERE',
           IMPORTO: x.SALDO,
           COD_CLIENTE: x.COD_CLIENTE,
           CLI_RA_SOC: x.CLI_RA_SOC,
@@ -82,23 +82,55 @@ export class AnteprimaGirocontoComponent implements OnInit {
           COD_DIVISIONE: x.COD_DIVISIONE,
           DES_DIVISIONE: x.DES_DIVISIONE
         };
-        data.push(r);
+        data.push(r1);
         const r2: RigaContoAnalitica = {
-          CONTO: x.CONTO_RICAVI,
-          DES_CONTO: x.DES_CONTO_RICAVI || '',
-          VERSO: 'DARE',
+          CONTO: 'ZZCONTR',
+          DES_CONTO: 'Contropartita',
+          SEGNO: 'DARE',
           IMPORTO: x.SALDO,
-          COD_CLIENTE: x.COD_CLIENTE,
-          CLI_RA_SOC: x.CLI_RA_SOC,
-          COD_ARTICOLO: x.COD_ARTICOLO,
-          DES_ARTICOLO: x.DES_ARTICOLO,
-          COD_ARTICOLO_RIF: x.COD_ARTICOLO_RIF,
-          DES_ARTICOLO_RIF: x.DES_ARTICOLO_RIF,
-          CENTRO_COSTO: x.CENTRO_COSTO,
-          COD_DIVISIONE: x.COD_DIVISIONE,
-          DES_DIVISIONE: x.DES_DIVISIONE
+          COD_CLIENTE: '',
+          CLI_RA_SOC: '',
+          COD_ARTICOLO: '',
+          DES_ARTICOLO: '',
+          COD_ARTICOLO_RIF: '',
+          DES_ARTICOLO_RIF: '',
+          CENTRO_COSTO: 'ZZCONTR',
+          COD_DIVISIONE: '',
+          DES_DIVISIONE: ''
         };
         data.push(r2);
+        const r3: RigaContoAnalitica = {
+          CONTO: x.CONTO_RICAVI,
+          DES_CONTO: x.DES_CONTO_RICAVI || '',
+          SEGNO: 'DARE',
+          IMPORTO: x.SALDO,
+          COD_CLIENTE: x.COD_CLIENTE,
+          CLI_RA_SOC: x.CLI_RA_SOC,
+          COD_ARTICOLO: x.COD_ARTICOLO,
+          DES_ARTICOLO: x.DES_ARTICOLO,
+          COD_ARTICOLO_RIF: x.COD_ARTICOLO_RIF,
+          DES_ARTICOLO_RIF: x.DES_ARTICOLO_RIF,
+          CENTRO_COSTO: x.CENTRO_COSTO,
+          COD_DIVISIONE: x.COD_DIVISIONE,
+          DES_DIVISIONE: x.DES_DIVISIONE
+        };
+        data.push(r3);
+        const r4: RigaContoAnalitica = {
+          CONTO: 'ZZCONTR',
+          DES_CONTO: 'Contropartita',
+          SEGNO: 'AVERE',
+          IMPORTO: x.SALDO,
+          COD_CLIENTE: '',
+          CLI_RA_SOC: '',
+          COD_ARTICOLO: '',
+          DES_ARTICOLO: '',
+          COD_ARTICOLO_RIF: '',
+          DES_ARTICOLO_RIF: '',
+          CENTRO_COSTO: 'ZZCONTR',
+          COD_DIVISIONE: '',
+          DES_DIVISIONE: ''
+        };
+        data.push(r4);
       } else if (!x.CONTO_RICAVI) {
         console.log('CONTO_RICAVI is null !?!', x);
       }
