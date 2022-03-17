@@ -11,13 +11,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_logged_user_JWT();
 
 $codCommessa = isset($_GET['codCommessa']) ? $panthera->escape_string($_GET['codCommessa']) : null;
+$aggregato = isset($_GET['aggregato']) ? $panthera->escape_string($_GET['aggregato']) : false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
     if ($codCommessa == null) {
         print_error(400, "Missing codCommessa");
     }
-    [$list, $count] = $saldiManager->getVistaAnalisiCommessa($codCommessa);
+    if (!$aggregato) {
+        [$list, $count] = $saldiManager->getVistaAnalisiCommessa($codCommessa);
+    } else {
+        [$list, $count] = $saldiManager->getVistaAnalisiCommessaAggregata($codCommessa);
+    }
         
     header('Content-Type: application/json');
     echo json_encode(['data' => $list, 'count' => $count]);

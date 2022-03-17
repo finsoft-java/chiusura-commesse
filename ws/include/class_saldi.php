@@ -183,7 +183,7 @@ class SaldiManager {
                         and not (S.GSL0DUCA = 0 and S.GSL0AUCA = 0)
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
-                    ORDER BY COD_CONTO";
+                    ORDER BY S.GAT0CD,S.GPV0CD,S.GPS2CD";
             $objects = $panthera->select_list($sql1);
         }
         
@@ -199,41 +199,69 @@ class SaldiManager {
 
         return [$objects, count($objects)];
     }
-    
-    function avanzamentoWorkflow($codCommessa) {
-        global $logged_user, $panthera, $ID_AZIENDA, $DATASET, $SUBSET, $STATO_WF_START, $STATO_WF_END;
 
-        if (!$panthera->mock) {
-            $sql = "UPDATE THIP.COMMESSE SET WF_NODE_ID='$STATO_WF_END' WHERE ID_COMMESSA='$codCommessa' ";
-            $panthera->execute_update($sql);
+    function getVistaAnalisiCommessaAggregata($codCommessa) {
+        global $matrice_conti, $panthera, $ID_AZIENDA, $DATASET, $SUBSET, $CENTRO_COSTO;
 
-            // transazione per incrementare il numeratore
-            sqlsrv_begin_transaction($panthera->conn);
-            $sql = "UPDATE THERA.NUMERATOR SET LAST_NUMBER=LAST_NUMBER+1 WHERE NUMERATOR_ID='WF_LOG'";
-            $panthera->execute_update($sql);
-            $sql = "SELECT LAST_NUMBER FROM THERA.NUMERATOR WHERE NUMERATOR_ID='WF_LOG'";
-            $id = $panthera->select_single_value($sql);
-            sqlsrv_commit($panthera->conn);
-
-            $utente = $logged_user->nome_utente . '_' . $ID_AZIENDA;
-            $sql = "INSERT INTO THERA.WF_LOG(
-                        ID,
-                        WF_CLASS_ID,WF_ID,WF_ARC_ID,
-                        INITIAL_NODE,INITIAL_SUB_NODE,
-                        FINAL_NODE,FINAL_SUB_NODE,
-                        OBJECT_KEY,
-                        USER_ID,
-                        USER_NOTE)
-                    VALUES (
-                        $id,
-                        51,'COM_WF','-',
-                        '$STATO_WF_START','-',
-                        '$STATO_WF_END','-',
-                        '$ID_AZIENDA'+CHAR(22)+'$codCommessa',
-                        '$utente',
-                        'Avanzamento via piattaforma Ricavi Commesse') ";
-            $panthera->execute_update($sql);
+        if ($panthera->mock) {
+            $objects = [ [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Fixture for seed attachment (n° 2)', 'COD_CLIENTE' => '006409', 'CLI_RA_SOC' => 'STMicroelectronics Silicon Carbide', 'COD_DIVISIONE' => 'SMP', 'COD_ARTICOLO' => 'F101010', 'DES_ARTICOLO' => '.', 'COD_ARTICOLO_RIF' => '', 'CENTRO_COSTO' => 'A51', 'DARE' => 0, 'AVERE' => 50000, 'SALDO' => 50000, 'COD_CONTO' => '606004', 'ESERCIZIO' => '2022', 'TIPO_CONTO' => 'TRANSITORIO' ],
+                      [ 'COD_COMMESSA' => 'C36140M01', 'DES_COMMESSA' => 'Fixture for seed attachment (n° 2)', 'COD_CLIENTE' => '006409', 'CLI_RA_SOC' => 'STMicroelectronics Silicon Carbide', 'COD_DIVISIONE' => 'SMP', 'COD_ARTICOLO' => 'F101010', 'DES_ARTICOLO' => '.', 'COD_ARTICOLO_RIF' => '', 'CENTRO_COSTO' => 'A51', 'DARE' => 50000, 'AVERE' => 0, 'SALDO' => -50000, 'COD_CONTO' => '901002', 'ESERCIZIO' => '2022', 'TIPO_CONTO' => 'RICAVI'  ]
+                     ];
+        } else {
+            $conti_transitori_imploded = "'" . implode("','", array_keys($matrice_conti)) .  "'";
+            $conti_ricavi_imploded = "'" . implode("','", array_values($matrice_conti)) .  "'";
+            $sql1 = "SELECT
+                        RTRIM(S.GPV0CD) as COD_CONTO,
+                        MAX(RTRIM(VOC.VOCDSNOR)) as DES_CONTO,
+                        RTRIM(S.GPC0CD) as CENTRO_COSTO,
+                        RTRIM(S.GPD0CD) as COD_COMMESSA,
+                        MAX(RTRIM(CD.DESCRIZIONE)) as DES_COMMESSA,
+                        MAX(RTRIM(S.T36CD)) as COD_DIVISIONE,
+                        MAX(RTRIM(D.T36DSNOR)) as DES_DIVISIONE,
+                        MAX(CASE WHEN CLICD !='' THEN RTRIM(CLICD) ELSE RTRIM(GPS4CD) END) as COD_CLIENTE,
+                        MAX(RTRIM(CLI.RAGIONE_SOCIALE)) as CLI_RA_SOC,
+                        RTRIM(S.GPS2CD) as COD_ARTICOLO,
+                        MAX(RTRIM(AR.DESCR_ESTESA)) as DES_ARTICOLO,
+                        RTRIM(S.GPS3CD) as COD_ARTICOLO_RIF,
+                        MAX(RTRIM(AR2.DESCR_ESTESA)) as DES_ARTICOLO_RIF,
+                        SUM(S.GSL0AUCA-S.GSL0DUCA) as SALDO,
+                        CASE WHEN S.GPV0CD in ($conti_transitori_imploded) THEN 'TRANSITORIO' ELSE 'RICAVI' END AS TIPO_CONTO
+                    FROM FINANCE.GSL0PT S
+                    JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
+                    JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
+                    LEFT JOIN FINANCE.BBT36PT D on D.T01CD = S.T01CD and D.T36CD = S.T36CD
+                    LEFT JOIN FINANCE.BBVOCPT VOC on VOC.T01CD = S.T01CD and VOC.VOCCD = S.GPV0CD
+                    LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
+                    LEFT JOIN THIP.ARTICOLI AR2 on AR2.ID_AZIENDA = S.T01CD and AR2.ID_ARTICOLO = S.GPS3CD
+                    LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
+                    WHERE S.T01CD = '$ID_AZIENDA'
+                        and S.GT01CD = '$DATASET'
+                        and S.GT02CD = '$SUBSET'
+                        and S.GSL0TPSL = 1
+                        and S.GS02CD = '*****'
+                        and DATEPART(yy, S.GAT0CD) > 2020     -- paracadute
+                        and S.GPV0CD not like 'ZZ%'           -- contropartita
+                        and S.GPC0CD = '$CENTRO_COSTO'
+                        and not (S.GSL0DUCA = 0 and S.GSL0AUCA = 0)
+                        and S.GPD0CD = '$codCommessa'
+                        and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
+                    GROUP BY S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD
+                    HAVING SUM(S.GSL0AUCA-S.GSL0DUCA)<>0
+                    ORDER BY S.GPV0CD,S.GPS2CD";
+            $objects = $panthera->select_list($sql1);
         }
+        
+        if (count($objects) > 0) {
+            foreach($objects as $id => $row) {
+                if ($row['TIPO_CONTO'] == 'TRANSITORIO') {
+                    $objects[$id]['CONTO_RICAVI'] = $matrice_conti[$row['COD_CONTO']];
+                } else {
+                    $objects[$id]['CONTO_RICAVI'] = null;
+                }
+            }
+        }
+
+        return [$objects, count($objects)];
     }
 
     function preparaGiroconto($codCommessa) {
@@ -341,7 +369,7 @@ class SaldiManager {
                         '$utente' as T96CD,
                         RTRIM(S.T01CD) as COD_AZIENDA,
                         $numReg as NUM_REG,
-                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.GPV0CD)) * 2 - 1 as NUM_RIGA,
+                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD)) * 2 - 1 as NUM_RIGA,
                         0 as TRANPRGT,
                         0 as WTRNRLOG,
                         '1' as STATO,
@@ -359,8 +387,8 @@ class SaldiManager {
                         CONVERT(DATE,GETDATE()) as DATA_DOC,
                         '1753-01-01' as DATA_VALUTA,
                         '1753-01-01' as DATA_SCAD_PAG,
-                        RTRIM(PARTITE.MAPAAPAR) as ANNO_PARTITA,
-                        RTRIM(PARTITE.MAPNRPAR) as NR_PARTITA,
+                        RTRIM(MAX(PARTITE.MAPAAPAR)) as ANNO_PARTITA,
+                        RTRIM(MAX(PARTITE.MAPNRPAR)) as NR_PARTITA,
                         '0'as TRANPIVA,
                         '1' as TRATPVAL,
                         '' as MOD_PAG,
@@ -398,8 +426,7 @@ class SaldiManager {
                         and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                    GROUP BY S.T01CD,S.GPV0CD,S.GPD0CD,S.GAT0CD,
-                        PARTITE.MAPAAPAR,PARTITE.MAPNRPAR
+                    GROUP BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD,CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END
                 UNION
                     SELECT
                         '$utente' as UTENTE_CRZ,
@@ -412,7 +439,7 @@ class SaldiManager {
                         '$utente' as T96CD,
                         RTRIM(S.T01CD) as COD_AZIENDA,
                         $numReg as NUM_REG,
-                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.GPV0CD)) * 2 as NUM_RIGA,
+                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD)) * 2 as NUM_RIGA,
                         0 as TRANPRGT,
                         0 as WTRNRLOG,
                         '1' as STATO,
@@ -430,14 +457,14 @@ class SaldiManager {
                         CONVERT(DATE,GETDATE()) as DATA_DOC,
                         '1753-01-01' as DATA_VALUTA,
                         '1753-01-01' as DATA_SCAD_PAG,
-                        RTRIM(PARTITE.MAPAAPAR) as ANNO_PARTITA,
-                        RTRIM(PARTITE.MAPNRPAR) as NR_PARTITA,
+                        RTRIM(MAX(PARTITE.MAPAAPAR)) as ANNO_PARTITA,
+                        RTRIM(MAX(PARTITE.MAPNRPAR)) as NR_PARTITA,
                         '0'as TRANPIVA,
                         '1' as TRATPVAL,
                         '' as MOD_PAG,
                         '' as VALUTA,
                         '2' as TRASEGNO,
-                        MAX(S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,
+                        SUM(S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,
                         '0' as TRAIIVVP,
                         '0' as TRAIVAVP,
                         S.GPD0CD as MOVT62CD,
@@ -469,8 +496,7 @@ class SaldiManager {
                         and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                    GROUP BY S.T01CD,S.GPV0CD,S.GPD0CD,S.GAT0CD,
-                        PARTITE.MAPAAPAR,PARTITE.MAPNRPAR
+                    GROUP BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD,CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END
                 ";
 
        $panthera->execute_update($query1);
@@ -640,8 +666,8 @@ class SaldiManager {
                         '' as SEGM4_PQ,
                         '' as SEGM5_PQ,
                         'Giroconto Ricavi' as GIPN_DESCRIZIONE,     -- teoricamente ricavabile da ????
-                        GSL0AUCA-GSL0DUCA as IMPORTO_VAL_TRANSAZ,
-                        GSL0AUCA-GSL0DUCA as IMPORTO_VAL_AZ,
+                        SUM(GSL0AUCA-GSL0DUCA) as IMPORTO_VAL_TRANSAZ,
+                        SUM(GSL0AUCA-GSL0DUCA) as IMPORTO_VAL_AZ,
                         0 as IMPORTO_VAL_GRP,
                         0 as QTY,
                         '1' as SEGNO,   -- Impostare uguale a segno di BETRAPT
@@ -676,7 +702,8 @@ class SaldiManager {
                         0 as UNITARIO_SERV4,
                         0 as UNITARIO_SERV5,
                         $numReg as NUM_REG,
-                        (ROW_NUMBER() OVER(PARTITION BY S.T01CD,S.GPV0CD ORDER BY S.T01CD,S.GPV0CD,S.GAT0CD)) * 2 - 1 as NUM_RIGA, -- come quello di BETRAPT !!!
+                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD)) * 2 - 1 as NUM_RIGA, -- come quello di BETRAPT !!!
+                        --0 as NUM_RIGA,
                         '' as CHIAVE_ORIGINE,
                         '' as SEPARATORE,
                         '' as TIPO_ORIGINE,
@@ -702,127 +729,7 @@ class SaldiManager {
                         and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                UNION
-                    SELECT
-                        '$DATASET' as DATASET,
-                        '1' as STATO,
-                        '$utente' as UTENTE_CRZ,
-                        CONVERT(DATE,GETDATE()) as DATA_CRZ,
-                        CONVERT(TIME, GETDATE()) as ORA_CRZ,
-                        '$utente' as UTENTE_AGG,
-                        CONVERT(DATE,GETDATE()) as DATA_AGG,
-                        CONVERT(TIME, GETDATE()) as ORA_AGG,
-                        $progressivo + (ROW_NUMBER() OVER(ORDER BY S.T01CD)) * 4 + 1 as PROGRESSIVO,
-                        '$ORIGINE' as ORIGINE,
-                        '$TP_NUMERATORE_AN' as TIPO_NUMERATORE,
-                        S.T01CD as COD_AZIENDA,
-                        CONVERT(DATE,GETDATE()) as DATA_REG,
-                        CONVERT(DATE,GETDATE()) as DATA_COMPETENZA,
-                        '$SUBSET' as SUBSET,
-                        '' as VERSIONE,
-                        '$EVENTO' as EVENTO,
-                        '' as ALIAS,
-                        '$CAU_AN' as CAUSALE,
-                        --'$NUMERATORE' as ???,
-                        '' as NR_RIF_ORIGINE,
-                        '1753-01-01' as DATA_REG_ORIGINE,
-                        '' as NUMERO_DOC,
-                        '1753-01-01' as DATA_DOC,
-                        '' as ABBINAMENTO,
-                        '1753-01-01' as DATA_ABBINAMENTO,
-                        '1753-01-01' as DATA_INIZIO_COMPETENZA,
-                        '1753-01-01' as DATA_FINE_COMPETENZA,
-                        S.T01CD as COD_AZIENDA_ORIGINE,
-                        S.GPV0CD as VOCE_CONTABILE,
-                        CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END as COD_CLIENTE,
-                        '' as COD_FORNITORE,
-                        '' as RIF_LIB1,
-                        '' as RIF_LIB2,
-                        '' as RIF_LIB3,
-                        '1753-01-01' as DATA_LIB1,
-                        '1753-01-01' as DATA_LIB2,
-                        '1753-01-01' as DATA_LIB3,
-                        S.T36CD as COD_DIVISIONE,
-                        '$CONTO_Z' as VOCE_GESTIONALE,
-                        '$CENTRO_COSTO_Z' as CENTRO_COSTO,
-                        '' as COD_COMMESSA,
-                        '' as SEGM1,
-                        '' as SEGM2,
-                        '' as SEGM3,
-                        '' as SEGM4,
-                        '' as SEGM5,
-                        S.T36CD as COD_DIVISIONE_PQ,
-                        S.GPV0CD as VOCE_CONTABILE_PQ,
-                        S.GPC0CD as CENTRO_COSTO_PQ,
-                        '' as COD_COMMESSA_PQ,
-                        '' as SEGM1_PQ,
-                        '' as SEGM2_PQ,
-                        '' as SEGM3_PQ,
-                        '' as SEGM4_PQ,
-                        '' as SEGM5_PQ,
-                        'Giroconto Ricavi' as GIPN_DESCRIZIONE,     -- teoricamente ricavabile da ????
-                        GSL0AUCA-GSL0DUCA as IMPORTO_VAL_TRANSAZ,
-                        GSL0AUCA-GSL0DUCA as IMPORTO_VAL_AZ,
-                        0 as IMPORTO_VAL_GRP,
-                        0 as QTY,
-                        '2' as SEGNO,   -- Impostare uguale a segno di BETRAPT
-                        '' as VALUTA,
-                        '1753-01-01' as DATA_CAMBIO_TRANSAZ,
-                        '' as TIPO_CAMBIO_TRANSAZ,
-                        1 as CAMBIO_TRANSAZ,
-                        '1753-01-01' as DATA_CAMBIO_GRP,
-                        '' as TIPO_CAMBIO_GRP,
-                        0 as CAMBIO_GRP,
-                        '' as UNITA_MISURA,
-                        '' as TIPO_UNITARIO,
-                        0 as UNITARITO,
-                        '' as CAMPO_SERV1,
-                        '' as CAMPO_SERV2,
-                        '' as CAMPO_SERV3,
-                        '' as FLAG_SERV1,
-                        '' as FLAG_SERV2,
-                        '' as FLAG_SERV3,
-                        0 as IMP_SERV1,
-                        0 as IMP_SERV2,
-                        0 as IMP_SERV3,
-                        0 as IMP_SERV4,
-                        0 as IMP_SERV5,
-                        0 as QTY_SERV1,
-                        0 as QTY_SERV2,
-                        '' as UNITA_MIS_SERV1,
-                        '' as UNITA_MIS_SERV2,
-                        0 as UNITARIO_SERV1,
-                        0 as UNITARIO_SERV2,
-                        0 as UNITARIO_SERV3,
-                        0 as UNITARIO_SERV4,
-                        0 as UNITARIO_SERV5,
-                        $numReg as NUM_REG,
-                        (ROW_NUMBER() OVER(PARTITION BY S.T01CD,S.GPV0CD ORDER BY S.T01CD,S.GPV0CD,S.GAT0CD)) * 2 - 1 as NUM_RIGA, -- come quello di BETRAPT !!!
-                        '' as CHIAVE_ORIGINE,
-                        '' as SEPARATORE,
-                        '' as TIPO_ORIGINE,
-                        '' as TIPO_INSERIMENTO,
-                        '' as TIPO_PERIODO,
-                        0 as PROGR_ELAB,
-                        '' as OGGETTO_APPLICATIVO,
-                        '1753-01-01' as DATA_ELAB,
-                        '' as CHECK_ELABORATO,
-                        '' as CHECK_DA_ELIMINARE
-                    FROM FINANCE.GSL0PT S
-                    JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
-                    JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
-                    LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
-                    LEFT JOIN THIP.ARTICOLI AR2 on AR2.ID_AZIENDA = S.T01CD and AR2.ID_ARTICOLO = S.GPS3CD
-                    LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
-                    WHERE S.T01CD = '$ID_AZIENDA'
-                        and S.GT01CD = '$DATASET'
-                        and S.GT02CD = '$SUBSET'
-                        and S.GSL0TPSL = 1
-                        and S.GS02CD = '*****'
-                        and S.GPC0CD = '$CENTRO_COSTO'
-                        and S.GSL0DUCA <> S.GSL0AUCA
-                        and S.GPD0CD = '$codCommessa'
-                        and S.GPV0CD in ($conti_transitori_imploded)
+                    GROUP BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD,CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END
                 UNION
                     SELECT
                         '$DATASET' as DATASET,
@@ -882,8 +789,8 @@ class SaldiManager {
                         '' as SEGM4_PQ,
                         '' as SEGM5_PQ,
                         'Giroconto Ricavi' as GIPN_DESCRIZIONE,     -- teoricamente ricavabile da ????
-                        GSL0AUCA-GSL0DUCA as IMPORTO_VAL_TRANSAZ,
-                        GSL0AUCA-GSL0DUCA as IMPORTO_VAL_AZ,
+                        SUM(GSL0AUCA-GSL0DUCA) as IMPORTO_VAL_TRANSAZ,
+                        SUM(GSL0AUCA-GSL0DUCA) as IMPORTO_VAL_AZ,
                         0 as IMPORTO_VAL_GRP,
                         0 as QTY,
                         '2' as SEGNO,   -- Impostare uguale a segno di BETRAPT
@@ -918,7 +825,8 @@ class SaldiManager {
                         0 as UNITARIO_SERV4,
                         0 as UNITARIO_SERV5,
                         $numReg as NUM_REG,
-                        (ROW_NUMBER() OVER(PARTITION BY S.T01CD,S.GPV0CD ORDER BY S.T01CD,S.GPV0CD,S.GAT0CD)) * 2 as NUM_RIGA, -- come quello di BETRAPT !!!
+                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD)) * 2 as NUM_RIGA, -- come quello di BETRAPT !!!
+                        --0 as NUM_RIGA,
                         '' as CHIAVE_ORIGINE,
                         '' as SEPARATORE,
                         '' as TIPO_ORIGINE,
@@ -944,127 +852,7 @@ class SaldiManager {
                         and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                UNION
-                    SELECT
-                        '$DATASET' as DATASET,
-                        '1' as STATO,
-                        '$utente' as UTENTE_CRZ,
-                        CONVERT(DATE,GETDATE()) as DATA_CRZ,
-                        CONVERT(TIME, GETDATE()) as ORA_CRZ,
-                        '$utente' as UTENTE_AGG,
-                        CONVERT(DATE,GETDATE()) as DATA_AGG,
-                        CONVERT(TIME, GETDATE()) as ORA_AGG,
-                        $progressivo + (ROW_NUMBER() OVER(ORDER BY S.T01CD)) * 4 + 3 as PROGRESSIVO,
-                        '$ORIGINE' as ORIGINE,
-                        '$TP_NUMERATORE_AN' as TIPO_NUMERATORE,
-                        S.T01CD as COD_AZIENDA,
-                        CONVERT(DATE,GETDATE()) as DATA_REG,
-                        CONVERT(DATE,GETDATE()) as DATA_COMPETENZA,
-                        '$SUBSET' as SUBSET,
-                        '' as VERSIONE,
-                        '$EVENTO' as EVENTO,
-                        '' as ALIAS,
-                        '$CAU_AN' as CAUSALE,
-                        --'$NUMERATORE' as ???,
-                        '' as NR_RIF_ORIGINE,
-                        '1753-01-01' as DATA_REG_ORIGINE,
-                        '' as NUMERO_DOC,
-                        '1753-01-01' as DATA_DOC,
-                        '' as ABBINAMENTO,
-                        '1753-01-01' as DATA_ABBINAMENTO,
-                        '1753-01-01' as DATA_INIZIO_COMPETENZA,
-                        '1753-01-01' as DATA_FINE_COMPETENZA,
-                        S.T01CD as COD_AZIENDA_ORIGINE,
-                        $decode_conto as VOCE_CONTABILE,
-                        CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END as COD_CLIENTE,
-                        '' as COD_FORNITORE,
-                        '' as RIF_LIB1,
-                        '' as RIF_LIB2,
-                        '' as RIF_LIB3,
-                        '1753-01-01' as DATA_LIB1,
-                        '1753-01-01' as DATA_LIB2,
-                        '1753-01-01' as DATA_LIB3,
-                        S.T36CD as COD_DIVISIONE,
-                        '$CONTO_Z' as VOCE_GESTIONALE,
-                        '$CENTRO_COSTO_Z' as CENTRO_COSTO,
-                        '' as COD_COMMESSA,
-                        '' as SEGM1,
-                        '' as SEGM2,
-                        '' as SEGM3,
-                        '' as SEGM4,
-                        '' as SEGM5,
-                        S.T36CD as COD_DIVISIONE_PQ,
-                        S.GPV0CD as VOCE_CONTABILE_PQ,
-                        S.GPC0CD as CENTRO_COSTO_PQ,
-                        '' as COD_COMMESSA_PQ,
-                        '' as SEGM1_PQ,
-                        '' as SEGM2_PQ,
-                        '' as SEGM3_PQ,
-                        '' as SEGM4_PQ,
-                        '' as SEGM5_PQ,
-                        'Giroconto Ricavi' as GIPN_DESCRIZIONE,     -- teoricamente ricavabile da ????
-                        GSL0AUCA-GSL0DUCA as IMPORTO_VAL_TRANSAZ,
-                        GSL0AUCA-GSL0DUCA as IMPORTO_VAL_AZ,
-                        0 as IMPORTO_VAL_GRP,
-                        0 as QTY,
-                        '1' as SEGNO,   -- Impostare uguale a segno di BETRAPT
-                        '' as VALUTA,
-                        '1753-01-01' as DATA_CAMBIO_TRANSAZ,
-                        '' as TIPO_CAMBIO_TRANSAZ,
-                        1 as CAMBIO_TRANSAZ,
-                        '1753-01-01' as DATA_CAMBIO_GRP,
-                        '' as TIPO_CAMBIO_GRP,
-                        0 as CAMBIO_GRP,
-                        '' as UNITA_MISURA,
-                        '' as TIPO_UNITARIO,
-                        0 as UNITARITO,
-                        '' as CAMPO_SERV1,
-                        '' as CAMPO_SERV2,
-                        '' as CAMPO_SERV3,
-                        '' as FLAG_SERV1,
-                        '' as FLAG_SERV2,
-                        '' as FLAG_SERV3,
-                        0 as IMP_SERV1,
-                        0 as IMP_SERV2,
-                        0 as IMP_SERV3,
-                        0 as IMP_SERV4,
-                        0 as IMP_SERV5,
-                        0 as QTY_SERV1,
-                        0 as QTY_SERV2,
-                        '' as UNITA_MIS_SERV1,
-                        '' as UNITA_MIS_SERV2,
-                        0 as UNITARIO_SERV1,
-                        0 as UNITARIO_SERV2,
-                        0 as UNITARIO_SERV3,
-                        0 as UNITARIO_SERV4,
-                        0 as UNITARIO_SERV5,
-                        $numReg as NUM_REG,
-                        (ROW_NUMBER() OVER(PARTITION BY S.T01CD,S.GPV0CD ORDER BY S.T01CD,S.GPV0CD,S.GAT0CD)) * 2 as NUM_RIGA, -- come quello di BETRAPT !!!
-                        '' as CHIAVE_ORIGINE,
-                        '' as SEPARATORE,
-                        '' as TIPO_ORIGINE,
-                        '' as TIPO_INSERIMENTO,
-                        '' as TIPO_PERIODO,
-                        0 as PROGR_ELAB,
-                        '' as OGGETTO_APPLICATIVO,
-                        '1753-01-01' as DATA_ELAB,
-                        '' as CHECK_ELABORATO,
-                        '' as CHECK_DA_ELIMINARE
-                    FROM FINANCE.GSL0PT S
-                    JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
-                    JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
-                    LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
-                    LEFT JOIN THIP.ARTICOLI AR2 on AR2.ID_AZIENDA = S.T01CD and AR2.ID_ARTICOLO = S.GPS3CD
-                    LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
-                    WHERE S.T01CD = '$ID_AZIENDA'
-                        and S.GT01CD = '$DATASET'
-                        and S.GT02CD = '$SUBSET'
-                        and S.GSL0TPSL = 1
-                        and S.GS02CD = '*****'
-                        and S.GPC0CD = '$CENTRO_COSTO'
-                        and S.GSL0DUCA <> S.GSL0AUCA
-                        and S.GPD0CD = '$codCommessa'
-                        and S.GPV0CD in ($conti_transitori_imploded)
+                    GROUP BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD,CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END
                 ";
 
 /*
@@ -1090,6 +878,42 @@ ZZCONTR     901001      1           (blank)     (blank)     ZZCONTR
             $panthera->execute_update("SET ANSI_WARNINGS  ON");
 
             return $numReg;
+    }
+    
+    function avanzamentoWorkflow($codCommessa) {
+        global $logged_user, $panthera, $ID_AZIENDA, $DATASET, $SUBSET, $STATO_WF_START, $STATO_WF_END;
+
+        if (!$panthera->mock) {
+            $sql = "UPDATE THIP.COMMESSE SET WF_NODE_ID='$STATO_WF_END' WHERE ID_COMMESSA='$codCommessa' ";
+            $panthera->execute_update($sql);
+
+            // transazione per incrementare il numeratore
+            sqlsrv_begin_transaction($panthera->conn);
+            $sql = "UPDATE THERA.NUMERATOR SET LAST_NUMBER=LAST_NUMBER+1 WHERE NUMERATOR_ID='WF_LOG'";
+            $panthera->execute_update($sql);
+            $sql = "SELECT LAST_NUMBER FROM THERA.NUMERATOR WHERE NUMERATOR_ID='WF_LOG'";
+            $id = $panthera->select_single_value($sql);
+            sqlsrv_commit($panthera->conn);
+
+            $utente = $logged_user->nome_utente . '_' . $ID_AZIENDA;
+            $sql = "INSERT INTO THERA.WF_LOG(
+                        ID,
+                        WF_CLASS_ID,WF_ID,WF_ARC_ID,
+                        INITIAL_NODE,INITIAL_SUB_NODE,
+                        FINAL_NODE,FINAL_SUB_NODE,
+                        OBJECT_KEY,
+                        USER_ID,
+                        USER_NOTE)
+                    VALUES (
+                        $id,
+                        51,'COM_WF','-',
+                        '$STATO_WF_START','-',
+                        '$STATO_WF_END','-',
+                        '$ID_AZIENDA'+CHAR(22)+'$codCommessa',
+                        '$utente',
+                        'Avanzamento via piattaforma Ricavi Commesse') ";
+            $panthera->execute_update($sql);
+        }
     }
 }
 ?>

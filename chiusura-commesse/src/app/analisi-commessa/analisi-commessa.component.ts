@@ -11,9 +11,10 @@ import { AnalisiCommesseService } from '../_services/analisi.commesse.service';
   styleUrls: ['./analisi-commessa.component.css']
 })
 export class AnalisiCommessaComponent implements OnInit {
-  displayedColumns: string[] = ['conto', 'divisione', 'cliente', 'articolo', 'artRif',
-    'centroCosto', 'dare', 'avere'];
+  displayedColumns: string[] = ['conto', 'centroCosto', 'divisione', 'cliente', 'articolo', 'artRif', 'saldo', 'esercizio'];
   dataSource = new MatTableDataSource<VistaAnalisiCommessa>();
+  displayedColumnsAggregata: string[] = ['conto', 'centroCosto', 'divisione', 'cliente', 'articolo', 'artRif', 'saldo'];
+  dataSourceAggregata = new MatTableDataSource<VistaAnalisiCommessa>();
   codCommessa!: string;
 
   constructor(
@@ -28,6 +29,12 @@ export class AnalisiCommessaComponent implements OnInit {
       this.codCommessa = params.codCommessa;
       this.svc.getAll({ codCommessa: this.codCommessa }).subscribe(response => {
         this.dataSource = new MatTableDataSource<VistaAnalisiCommessa>(response.data);
+      },
+      error => {
+        this.alertService.error(error);
+      });
+      this.svc.getAllAggregata({ codCommessa: this.codCommessa }).subscribe(response => {
+        this.dataSourceAggregata = new MatTableDataSource<VistaAnalisiCommessa>(response.data);
       },
       error => {
         this.alertService.error(error);

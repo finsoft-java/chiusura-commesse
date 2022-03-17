@@ -15,7 +15,7 @@ export interface VistaAnalisiCommessa {
   DARE: number;
   AVERE: number;
   SALDO: number;
-  ESERCIZIO: number;
+  ESERCIZIO?: number; // Questo campo manca nella vista aggregata
   TIPO_CONTO: 'TRANSITORIO' | 'RICAVI' | null;
   CONTO_RICAVI: string | null;
   DES_CONTO_RICAVI: string | null;
