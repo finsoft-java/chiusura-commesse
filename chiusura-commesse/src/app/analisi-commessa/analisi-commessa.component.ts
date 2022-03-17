@@ -11,9 +11,8 @@ import { AnalisiCommesseService } from '../_services/analisi.commesse.service';
   styleUrls: ['./analisi-commessa.component.css']
 })
 export class AnalisiCommessaComponent implements OnInit {
-  displayedColumns: string[] = ['conto', 'centroCosto', 'divisione', 'cliente', 'articolo', 'artRif', 'saldo', 'esercizio'];
+  displayedColumns: string[] = ['esercizio', 'conto', 'centroCosto', 'divisione', 'cliente', 'articolo', 'artRif', 'saldo'];
   dataSource = new MatTableDataSource<VistaAnalisiCommessa>();
-  displayedColumnsAggregata: string[] = ['conto', 'centroCosto', 'divisione', 'cliente', 'articolo', 'artRif', 'saldo'];
   dataSourceAggregata = new MatTableDataSource<VistaAnalisiCommessa>();
   codCommessa!: string;
 
