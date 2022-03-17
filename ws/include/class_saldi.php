@@ -66,7 +66,7 @@ class SaldiManager {
                         and ('$codCommessa'='' or S.GPD0CD='$codCommessa')
                         -- and CD.WF_NODE_ID='$STATO_WF_START'
                     GROUP BY
-                        S.GPV0CD,S.GPD0CD,S.T36CD,S.GPC0CD,S.GSL0AUCA,S.GSL0DUCA,
+                        S.T01CD,S.GPV0CD,S.GPD0CD,S.T36CD,S.GPC0CD,S.GSL0AUCA,S.GSL0DUCA,
                         VOC.VOCDSNOR,
                         CD.DESCRIZIONE,
                         D.T36DSNOR,
@@ -183,7 +183,7 @@ class SaldiManager {
                         and not (S.GSL0DUCA = 0 and S.GSL0AUCA = 0)
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
-                    ORDER BY S.GAT0CD,S.GPV0CD,S.GPS2CD";
+                    ORDER BY S.T01CD,S.GAT0CD,S.GPV0CD,S.GPS2CD";
             $objects = $panthera->select_list($sql1);
         }
         
@@ -245,9 +245,9 @@ class SaldiManager {
                         and not (S.GSL0DUCA = 0 and S.GSL0AUCA = 0)
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
-                    GROUP BY S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD
+                    GROUP BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD
                     HAVING SUM(S.GSL0AUCA-S.GSL0DUCA)<>0
-                    ORDER BY S.GPV0CD,S.GPS2CD";
+                    ORDER BY S.T01CD,S.GPV0CD,S.GPS2CD";
             $objects = $panthera->select_list($sql1);
         }
         
@@ -369,7 +369,7 @@ class SaldiManager {
                         '$utente' as T96CD,
                         RTRIM(S.T01CD) as COD_AZIENDA,
                         $numReg as NUM_REG,
-                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD)) * 2 - 1 as NUM_RIGA,
+                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD)) * 2 - 1 as NUM_RIGA,
                         0 as TRANPRGT,
                         0 as WTRNRLOG,
                         '1' as STATO,
@@ -426,7 +426,8 @@ class SaldiManager {
                         and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                    GROUP BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD,CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END
+                    GROUP BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD
+                    HAVING SUM(S.GSL0AUCA-S.GSL0DUCA)<>0
                 UNION
                     SELECT
                         '$utente' as UTENTE_CRZ,
@@ -439,7 +440,7 @@ class SaldiManager {
                         '$utente' as T96CD,
                         RTRIM(S.T01CD) as COD_AZIENDA,
                         $numReg as NUM_REG,
-                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD)) * 2 as NUM_RIGA,
+                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD)) * 2 as NUM_RIGA,
                         0 as TRANPRGT,
                         0 as WTRNRLOG,
                         '1' as STATO,
@@ -496,7 +497,8 @@ class SaldiManager {
                         and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                    GROUP BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD,CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END
+                    GROUP BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD
+                    HAVING SUM(S.GSL0AUCA-S.GSL0DUCA)<>0
                 ";
 
        $panthera->execute_update($query1);
@@ -639,7 +641,7 @@ class SaldiManager {
                         '1753-01-01' as DATA_FINE_COMPETENZA,
                         S.T01CD as COD_AZIENDA_ORIGINE,
                         S.GPV0CD as VOCE_CONTABILE,
-                        CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END as COD_CLIENTE,
+                        MAX(CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END) as COD_CLIENTE,
                         '' as COD_FORNITORE,
                         '' as RIF_LIB1,
                         '' as RIF_LIB2,
@@ -647,7 +649,7 @@ class SaldiManager {
                         '1753-01-01' as DATA_LIB1,
                         '1753-01-01' as DATA_LIB2,
                         '1753-01-01' as DATA_LIB3,
-                        S.T36CD as COD_DIVISIONE,
+                        MAX(S.T36CD) as COD_DIVISIONE,
                         S.GPV0CD as VOCE_GESTIONALE,
                         '$CENTRO_COSTO_AN' as CENTRO_COSTO,
                         S.GPD0CD as COD_COMMESSA,
@@ -656,7 +658,7 @@ class SaldiManager {
                         S.GPS3CD as SEGM3,
                         '' as SEGM4,
                         '' as SEGM5,
-                        S.T36CD as COD_DIVISIONE_PQ,
+                        MAX(S.T36CD) as COD_DIVISIONE_PQ,
                         S.GPV0CD as VOCE_CONTABILE_PQ,
                         S.GPC0CD as CENTRO_COSTO_PQ,
                         S.GPD0CD as COD_COMMESSA_PQ,
@@ -702,7 +704,7 @@ class SaldiManager {
                         0 as UNITARIO_SERV4,
                         0 as UNITARIO_SERV5,
                         $numReg as NUM_REG,
-                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD)) * 2 - 1 as NUM_RIGA, -- come quello di BETRAPT !!!
+                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD)) * 2 - 1 as NUM_RIGA, -- come quello di BETRAPT !!!
                         --0 as NUM_RIGA,
                         '' as CHIAVE_ORIGINE,
                         '' as SEPARATORE,
@@ -729,7 +731,9 @@ class SaldiManager {
                         and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                    GROUP BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD,CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END
+                    --GROUP BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD,CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END
+                    GROUP BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD
+                    HAVING SUM(S.GSL0AUCA-S.GSL0DUCA)<>0
                 UNION
                     SELECT
                         '$DATASET' as DATASET,
@@ -762,7 +766,7 @@ class SaldiManager {
                         '1753-01-01' as DATA_FINE_COMPETENZA,
                         S.T01CD as COD_AZIENDA_ORIGINE,
                         $decode_conto as VOCE_CONTABILE,
-                        CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END as COD_CLIENTE,
+                        MAX(CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END) as COD_CLIENTE,
                         '' as COD_FORNITORE,
                         '' as RIF_LIB1,
                         '' as RIF_LIB2,
@@ -770,7 +774,7 @@ class SaldiManager {
                         '1753-01-01' as DATA_LIB1,
                         '1753-01-01' as DATA_LIB2,
                         '1753-01-01' as DATA_LIB3,
-                        S.T36CD as COD_DIVISIONE,
+                        MAX(S.T36CD) as COD_DIVISIONE,
                         $decode_conto as VOCE_GESTIONALE,
                         S.GPC0CD as CENTRO_COSTO,
                         S.GPD0CD as COD_COMMESSA,
@@ -779,7 +783,7 @@ class SaldiManager {
                         S.GPS3CD as SEGM3,
                         '' as SEGM4,
                         '' as SEGM5,
-                        S.T36CD as COD_DIVISIONE_PQ,
+                        MAX(S.T36CD) as COD_DIVISIONE_PQ,
                         S.GPV0CD as VOCE_CONTABILE_PQ,
                         S.GPC0CD as CENTRO_COSTO_PQ,
                         S.GPD0CD as COD_COMMESSA_PQ,
@@ -825,7 +829,7 @@ class SaldiManager {
                         0 as UNITARIO_SERV4,
                         0 as UNITARIO_SERV5,
                         $numReg as NUM_REG,
-                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD)) * 2 as NUM_RIGA, -- come quello di BETRAPT !!!
+                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD)) * 2 as NUM_RIGA, -- come quello di BETRAPT !!!
                         --0 as NUM_RIGA,
                         '' as CHIAVE_ORIGINE,
                         '' as SEPARATORE,
@@ -852,7 +856,9 @@ class SaldiManager {
                         and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                    GROUP BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD,CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END
+                    --GROUP BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD,CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END
+                    GROUP BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD
+                    HAVING SUM(S.GSL0AUCA-S.GSL0DUCA)<>0
                 ";
 
 /*
@@ -865,6 +871,7 @@ ZZCONTR     606002      2           (blank)     (blank)     ZZCONTR
 901001      901001      2           ZZCONTR     ZZCONTR     CR001
 ZZCONTR     901001      1           (blank)     (blank)     ZZCONTR
 
+PERO' le due righe di contropartita vengono generate automaticamente dall'imm.massa
 */
 
             $panthera->execute_update($query2);

@@ -38,7 +38,7 @@ export class AnteprimaGirocontoComponent implements OnInit {
     this.svcCruscotto.getById(this.codCommessa).subscribe(response => {
       this.prepareDataCoGe(response.value);
     });
-    this.svcAnalisi.getAll({ codCommessa: this.codCommessa }).subscribe(response => {
+    this.svcAnalisi.getAllAggregata({ codCommessa: this.codCommessa }).subscribe(response => {
       this.prepareDataCoAn(response.data);
     });
   }
