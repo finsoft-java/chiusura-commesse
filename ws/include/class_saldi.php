@@ -335,6 +335,7 @@ class SaldiManager {
                         TRAIVAVP,   -- Imposta IVA val primaria
                         MOVT62CD,   -- Commessa_REF
                         T97CD,      -- oggetto applicativo
+                        T36CD,
                         -- campi da valorizzare a zero:
                         TRAALIVA,
                         TRACAMBVP,
@@ -353,7 +354,7 @@ class SaldiManager {
                         TRANREGG,      -- nr. registrazione (viene valorizzato dall'immissione di massa)
                         TRANRIGG,      -- nr. riga (viene valorizzato dall'immissione di massa)
                         -- campi da valorizzare a blank:
-                        T15CD,CLICD,FORCD,T16CD,T17CD,TRASCAVI,TRANDORI,TRANUPRA,T36CD,T30CD,
+                        T15CD,CLICD,FORCD,T16CD,T17CD,TRASCAVI,TRANDORI,TRANUPRA,T30CD,
                         TRASOFAC,T07CD,T06CD,T05CD,MOVNAPAG,TRATPPAG,TRATPEFF,TRATPELE,T40CD,T44CD,
                         TRATESTO,TRADSCOM,MOVNUCIS,T25CD,T26CD,T28CD,T66TPCNT,MOVT61CD,MOVVCACD,T04CD,
                         TRATICAU
@@ -399,8 +400,9 @@ class SaldiManager {
                         '0' as TRAIVAVP,
                         RTRIM(S.GPD0CD) as MOVT62CD,
                         '' as T97CD,
+                        MAX(RTRIM(S.T36CD)) as COD_DIVISIONE,
                         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                        '','','','','','','','','','',
+                        '','','','','','','','','',
                         '','','','','','','','','','',
                         '','','','','','','','','','',
                         ''
@@ -470,8 +472,9 @@ class SaldiManager {
                         '0' as TRAIVAVP,
                         S.GPD0CD as MOVT62CD,
                         '' as T97CD,
+                        MAX(RTRIM(S.T36CD)) as COD_DIVISIONE,
                         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                        '','','','','','','','','','',
+                        '','','','','','','','','',
                         '','','','','','','','','','',
                         '','','','','','','','','','',
                         ''
