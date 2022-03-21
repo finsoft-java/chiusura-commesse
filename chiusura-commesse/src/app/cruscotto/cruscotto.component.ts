@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { VistaCruscotto } from '../_models';
 import { AlertService } from '../_services/alert.service';
 import { AzioniService } from '../_services/azioni.service';
@@ -25,14 +25,17 @@ export class CruscottoComponent implements OnInit, OnDestroy {
   ];
   REFRESH_DELAY = 60; // refresh every REFRESH_DELAY seconds
   timer?: number;
+  filtroCommessa: string = '';
 
   constructor(private router: Router,
+    private route: ActivatedRoute,
     private svc: CruscottoService,
     private azioniSvc: AzioniService,
     private alertService: AlertService) {
   }
 
   ngOnInit(): void {
+    this.filtroCommessa = this.route.snapshot.queryParamMap.get('commessa') || '';
     this.getAll();
     this.timer = window.setInterval(() => {
       this.getAll();
@@ -44,7 +47,7 @@ export class CruscottoComponent implements OnInit, OnDestroy {
   }
 
   getAll(): void {
-    this.svc.getAll({}).subscribe(response => {
+    this.svc.getAll({ filtroCommessa: this.filtroCommessa }).subscribe(response => {
       response.data.forEach(x => {
         this.validazione(x);
       });
@@ -53,6 +56,16 @@ export class CruscottoComponent implements OnInit, OnDestroy {
     error => {
       this.alertService.error(error);
     });
+  }
+
+  filtra(): void {
+    localStorage.setItem('filtroCommessa', this.filtroCommessa);
+
+    if (this.filtroCommessa) {
+      this.router.navigate(['cruscotto'], { queryParams: { commessa: this.filtroCommessa } });
+    } else {
+      this.router.navigate(['cruscotto']);
+    }
   }
 
   validazione(x: VistaCruscotto) {

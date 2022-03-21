@@ -11,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_logged_user_JWT();
 
 $codCommessa = isset($_GET['codCommessa']) ? $panthera->escape_string($_GET['codCommessa']) : null;
+$filtroCommessa = isset($_GET['filtroCommessa']) ? $panthera->escape_string($_GET['filtroCommessa']) : null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
@@ -21,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode(['data' => $list, 'count' => $count]);
 
     } else {
-        [$list, $count] = $saldiManager->getVistaCruscotto($codCommessa);
+        [$list, $count] = $saldiManager->getVistaCruscotto($codCommessa, $filtroCommessa);
         if ($count == 0) {
             print_error(404, "Commessa non trovata: $codCommessa");
         }

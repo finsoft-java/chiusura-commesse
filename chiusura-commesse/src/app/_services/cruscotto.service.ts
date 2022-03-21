@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -10,7 +10,9 @@ export class CruscottoService implements HttpCrudService<VistaCruscotto> {
   constructor(private http: HttpClient) { }
 
   getAll(parameters: any): Observable<ListBean<VistaCruscotto>> {
-    return this.http.get<ListBean<VistaCruscotto>>(environment.wsUrl + 'VistaCruscotto.php');
+    let queryParams = new HttpParams();
+    queryParams = queryParams.append('filtroCommessa', parameters.filtroCommessa);
+    return this.http.get<ListBean<VistaCruscotto>>(environment.wsUrl + 'VistaCruscotto.php', { params: queryParams });
   }
 
   getById(codCommessa: string): Observable<ValueBean<VistaCruscotto>> {

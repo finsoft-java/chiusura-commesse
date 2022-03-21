@@ -42,6 +42,10 @@ export class AnalisiCommessaComponent implements OnInit {
   }
 
   back() {
-    this.router.navigate(['cruscotto', this.codCommessa]);
+    if (localStorage.getItem('filtroCommessa')) {
+      this.router.navigate(['cruscotto', this.codCommessa], { queryParams: { commessa: localStorage.getItem('filtroCommessa') } });
+    } else {
+      this.router.navigate(['cruscotto', this.codCommessa]);
+    }
   }
 }

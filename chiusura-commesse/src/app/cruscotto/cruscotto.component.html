@@ -4,7 +4,12 @@
 In questa schermata vengono presentate tutte le commesse in stato workflow "Installata presso Cliente (SAT)".
 </div>
 
-<div style="margin-top:20px">
+<div style="text-align:right; margin-top:10px">
+    <mat-form-field class="example-full-width">
+        <input matInput placeholder="Filtra per commessa...." [(ngModel)]="filtroCommessa" (change)="filtra()">
+    </mat-form-field>
+</div>
+<div style="margin-top:10px">
 <table mat-table [dataSource]="dataSource" class="contentTable mat-elevation-z8">
 
     <ng-container matColumnDef="commessa">
