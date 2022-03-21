@@ -48,9 +48,6 @@ export class CruscottoComponent implements OnInit, OnDestroy {
 
   getAll(): void {
     this.svc.getAll({ filtroCommessa: this.filtroCommessa }).subscribe(response => {
-      response.data.forEach(x => {
-        this.validazione(x);
-      });
       this.dataSource = new MatTableDataSource<VistaCruscotto>(response.data);
     },
     error => {
@@ -66,27 +63,8 @@ export class CruscottoComponent implements OnInit, OnDestroy {
     } else {
       this.router.navigate(['cruscotto']);
     }
-  }
-
-  validazione(x: VistaCruscotto) {
-    console.log(x);
-    x.TOT_FATTURATO = x.TOT_FATTURATO || 0.0;
-    x.SALDO_CONTO_RICAVI = x.SALDO_CONTO_RICAVI || 0.0;
-    x.SALDO_CONTO_TRANSITORIO = x.SALDO_CONTO_TRANSITORIO || 0.0;
-    x.CONTO_TRANSITORIO = x.CONTO_TRANSITORIO || '';
-    x.CONTO_RICAVI = x.CONTO_RICAVI || '';
-
-    if (x.CONTO_TRANSITORIO.includes(';') || x.CONTO_RICAVI === '' || x.CONTO_RICAVI.includes(';')) {
-      x.TIPO = 5; // c'è qualche problema (conti non ben determinati), l'utente deve correggere in Panthera
-    } else if (x.TOT_FATTURATO !== (x.SALDO_CONTO_RICAVI + x.SALDO_CONTO_TRANSITORIO)) {
-      x.TIPO = 4; // c'è qualche problema (squadratura), l'utente deve correggere in Panthera
-    } else if (x.SALDO_CONTO_TRANSITORIO === 0.0) {
-      x.TIPO = 1; // non serve giroconto, si può chiudere
-    } else if (x.SALDO_CONTO_RICAVI === 0.0) {
-      x.TIPO = 2; // serve giroconto, poi diventa di tipo 1
-    } else {
-      x.TIPO = 3; // serve giroconto (parziale) e anche una verifica da parte dell'utente, poi diventa di tipo 1
-    }
+    // in questo caso il router cambia l'URL ma non ricarica il componente
+    this.getAll();
   }
 
   analisi(row: VistaCruscotto) {

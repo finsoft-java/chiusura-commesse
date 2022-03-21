@@ -19,6 +19,13 @@ export class AnalisiCommessaComponent implements OnInit {
   codCommessa!: string;
   datiCruscotto!: VistaCruscotto;
   utentePrivilegiato = true;
+  warnings = [
+    'Giroconto non necessario, si può procedere all\'avanzamento del workflow',
+    'Si può procedere al giroconto',
+    'Giroconto parziale',
+    'Squadratura',
+    'Verificare conto'
+  ];
 
   constructor(
     private route: ActivatedRoute,
@@ -44,9 +51,9 @@ export class AnalisiCommessaComponent implements OnInit {
       error => {
         this.alertService.error(error);
       });
-      this.svcCruscotto.getAll({ codCommessa: this.codCommessa }).subscribe(response => {
+      this.svcCruscotto.getById(this.codCommessa).subscribe(response => {
         // eslint-disable-next-line prefer-destructuring
-        this.datiCruscotto = response.data[0];
+        this.datiCruscotto = response.value;
       },
       error => {
         this.alertService.error(error);

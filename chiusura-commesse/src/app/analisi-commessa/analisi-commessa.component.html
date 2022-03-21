@@ -2,6 +2,8 @@
 
 <div>Tabella riassuntiva dei saldi contabili della commessa selezionata</div>
 
+<div style="margin-top:20px">Totale fatturato: {{datiCruscotto?.TOT_FATTURATO |number:'1.2' }}</div>
+<div style="margin-top:20px">Esito validazione: {{datiCruscotto ? warnings[datiCruscotto.TIPO!-1] : '' }}</div>
 <div style="margin-top:20px">
 <table mat-table [dataSource]="dataSource" class="contentTable mat-elevation-z8">
 
@@ -85,8 +87,7 @@
 </div>
 
 <div style="margin-top:20px">
-<button mat-raised-button color="" (click)="back()">Ritorna al cruscotto</button>
-<button *ngIf="datiCruscotto && utentePrivilegiato && datiCruscotto.TIPO!==1" mat-raised-button color="warn"
+<button *ngIf="datiCruscotto && utentePrivilegiato && datiCruscotto.TIPO==1" mat-raised-button color="warn"
                 (click)="avanzamentoWorkflow(datiCruscotto)"
                 >Avanzamento WF</button>
 <button *ngIf="datiCruscotto && utentePrivilegiato && datiCruscotto.TIPO!==1" mat-raised-button color="warn"
@@ -94,4 +95,5 @@
     [disabled]="datiCruscotto.TIPO! >= 4"
     [title]="datiCruscotto.TIPO! >= 4 ? 'Prima occorre risolvere le anomalie in Panthera': ''"
     >Giroconto</button>
+<button mat-raised-button color="" (click)="back()">Ritorna al cruscotto</button>
 </div>
