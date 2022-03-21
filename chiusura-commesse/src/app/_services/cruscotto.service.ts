@@ -28,7 +28,12 @@ export class CruscottoService implements HttpCrudService<VistaCruscotto> {
   }
 
   getById(codCommessa: string): Observable<ValueBean<VistaCruscotto>> {
-    return this.http.get<ValueBean<VistaCruscotto>>(environment.wsUrl + `VistaCruscotto.php?codCommessa=${codCommessa}`);
+    return this.http.get<ValueBean<VistaCruscotto>>(environment.wsUrl + `VistaCruscotto.php?codCommessa=${codCommessa}`).pipe(
+      map(v => {
+        this.validazione(v.value);
+        return v;
+      })
+    );
   }
 
   create(obj: VistaCruscotto): Observable<ValueBean<VistaCruscotto>> {
@@ -42,7 +47,6 @@ export class CruscottoService implements HttpCrudService<VistaCruscotto> {
   }
 
   validazione(x: VistaCruscotto) {
-    console.log('Validating:', x);
     x.TOT_FATTURATO = x.TOT_FATTURATO || 0.0;
     x.SALDO_CONTO_RICAVI = x.SALDO_CONTO_RICAVI || 0.0;
     x.SALDO_CONTO_TRANSITORIO = x.SALDO_CONTO_TRANSITORIO || 0.0;
@@ -60,5 +64,6 @@ export class CruscottoService implements HttpCrudService<VistaCruscotto> {
     } else {
       x.TIPO = 3; // serve giroconto (parziale) e anche una verifica da parte dell'utente, poi diventa di tipo 1
     }
+    return x;
   }
 }

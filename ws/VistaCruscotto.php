@@ -16,13 +16,13 @@ $filtroCommessa = isset($_GET['filtroCommessa']) ? $panthera->escape_string($_GE
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
     if ($codCommessa == null) {
-        [$list, $count] = $saldiManager->getVistaCruscotto();
+        [$list, $count] = $saldiManager->getVistaCruscotto('', $filtroCommessa);
           
         header('Content-Type: application/json');
         echo json_encode(['data' => $list, 'count' => $count]);
 
     } else {
-        [$list, $count] = $saldiManager->getVistaCruscotto($codCommessa, $filtroCommessa);
+        [$list, $count] = $saldiManager->getVistaCruscotto($codCommessa);
         if ($count == 0) {
             print_error(404, "Commessa non trovata: $codCommessa");
         }

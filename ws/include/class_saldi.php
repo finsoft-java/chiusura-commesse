@@ -64,7 +64,7 @@ class SaldiManager {
                         and S.GPV0CD not like 'ZZ%'           -- contropartita
                         and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
                         and ('$codCommessa'='' or S.GPD0CD='$codCommessa')
-                        and ('$filtroCommessa'='' or S.GPD0CD LIKE '%$filtroCommessa%')
+                        and ('$filtroCommessa'='' or UPPER(S.GPD0CD) LIKE UPPER('%$filtroCommessa%'))
                         -- and CD.WF_NODE_ID='$STATO_WF_START'
                     GROUP BY
                         S.T01CD,S.GPV0CD,S.GPD0CD,S.T36CD,S.GPC0CD,S.GSL0AUCA,S.GSL0DUCA,
