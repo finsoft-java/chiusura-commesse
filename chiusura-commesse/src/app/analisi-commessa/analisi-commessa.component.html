@@ -86,4 +86,12 @@
 
 <div style="margin-top:20px">
 <button mat-raised-button color="" (click)="back()">Ritorna al cruscotto</button>
+<button *ngIf="datiCruscotto && utentePrivilegiato && datiCruscotto.TIPO!==1" mat-raised-button color="warn"
+                (click)="avanzamentoWorkflow(datiCruscotto)"
+                >Avanzamento WF</button>
+<button *ngIf="datiCruscotto && utentePrivilegiato && datiCruscotto.TIPO!==1" mat-raised-button color="warn"
+    (click)="giroconto(datiCruscotto)"
+    [disabled]="datiCruscotto.TIPO! >= 4"
+    [title]="datiCruscotto.TIPO! >= 4 ? 'Prima occorre risolvere le anomalie in Panthera': ''"
+    >Giroconto</button>
 </div>

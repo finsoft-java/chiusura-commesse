@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
-import { VistaAnalisiCommessa } from '../_models';
+import { VistaAnalisiCommessa, VistaCruscotto } from '../_models';
 import { AlertService } from '../_services/alert.service';
 import { AnalisiCommesseService } from '../_services/analisi.commesse.service';
+import { AzioniService } from '../_services/azioni.service';
+import { CruscottoService } from '../_services/cruscotto.service';
 
 @Component({
   selector: 'app-analisi-commessa',
@@ -15,25 +17,36 @@ export class AnalisiCommessaComponent implements OnInit {
   dataSource = new MatTableDataSource<VistaAnalisiCommessa>();
   dataSourceAggregata = new MatTableDataSource<VistaAnalisiCommessa>();
   codCommessa!: string;
+  datiCruscotto!: VistaCruscotto;
+  utentePrivilegiato = true;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private svc: AnalisiCommesseService,
+    private svcAnalisi: AnalisiCommesseService,
+    private svcCruscotto: CruscottoService,
+    private azioniSvc: AzioniService,
     private alertService: AlertService
   ) { }
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
       this.codCommessa = params.codCommessa;
-      this.svc.getAll({ codCommessa: this.codCommessa }).subscribe(response => {
+      this.svcAnalisi.getAll({ codCommessa: this.codCommessa }).subscribe(response => {
         this.dataSource = new MatTableDataSource<VistaAnalisiCommessa>(response.data);
       },
       error => {
         this.alertService.error(error);
       });
-      this.svc.getAllAggregata({ codCommessa: this.codCommessa }).subscribe(response => {
+      this.svcAnalisi.getAllAggregata({ codCommessa: this.codCommessa }).subscribe(response => {
         this.dataSourceAggregata = new MatTableDataSource<VistaAnalisiCommessa>(response.data);
+      },
+      error => {
+        this.alertService.error(error);
+      });
+      this.svcCruscotto.getAll({ codCommessa: this.codCommessa }).subscribe(response => {
+        // eslint-disable-next-line prefer-destructuring
+        this.datiCruscotto = response.data[0];
       },
       error => {
         this.alertService.error(error);
@@ -43,9 +56,24 @@ export class AnalisiCommessaComponent implements OnInit {
 
   back() {
     if (localStorage.getItem('filtroCommessa')) {
-      this.router.navigate(['cruscotto', this.codCommessa], { queryParams: { commessa: localStorage.getItem('filtroCommessa') } });
+      this.router.navigate(['cruscotto'], { queryParams: { commessa: localStorage.getItem('filtroCommessa') } });
     } else {
-      this.router.navigate(['cruscotto', this.codCommessa]);
+      this.router.navigate(['cruscotto']);
     }
+  }
+
+  avanzamentoWorkflow(row: VistaCruscotto) {
+    if (confirm('Il workflow verrà avanzato in stato "A Ricavo". Procedere?')) {
+      this.azioniSvc.avanzamentoWorkflow(row.COD_COMMESSA).subscribe(response => {
+        this.alertService.success('Stato workflow modificato correttamente.');
+      },
+      error => {
+        this.alertService.error(error);
+      });
+    }
+  }
+
+  giroconto(row: VistaCruscotto) {
+    this.router.navigate(['anteprima-giroconto', row.COD_COMMESSA]);
   }
 }

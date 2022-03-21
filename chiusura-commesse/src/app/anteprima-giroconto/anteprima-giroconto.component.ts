@@ -156,9 +156,9 @@ export class AnteprimaGirocontoComponent implements OnInit {
 
   back() {
     if (localStorage.getItem('filtroCommessa')) {
-      this.router.navigate(['cruscotto', this.codCommessa], { queryParams: { commessa: localStorage.getItem('filtroCommessa') } });
+      this.router.navigate(['cruscotto'], { queryParams: { commessa: localStorage.getItem('filtroCommessa') } });
     } else {
-      this.router.navigate(['cruscotto', this.codCommessa]);
+      this.router.navigate(['cruscotto']);
     }
   }
 }

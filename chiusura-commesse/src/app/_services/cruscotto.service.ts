@@ -11,7 +11,9 @@ export class CruscottoService implements HttpCrudService<VistaCruscotto> {
 
   getAll(parameters: any): Observable<ListBean<VistaCruscotto>> {
     let queryParams = new HttpParams();
-    queryParams = queryParams.append('filtroCommessa', parameters.filtroCommessa);
+    if (parameters.filtroCommessa) {
+      queryParams = queryParams.append('filtroCommessa', parameters.filtroCommessa);
+    }
     return this.http.get<ListBean<VistaCruscotto>>(environment.wsUrl + 'VistaCruscotto.php', { params: queryParams });
   }
 
