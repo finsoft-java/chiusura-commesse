@@ -37,6 +37,7 @@ export class AnalisiCommessaComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.utentePrivilegiato = localStorage.getItem('role') === 'readwrite';
     this.route.params.subscribe(params => {
       this.codCommessa = params.codCommessa;
       this.svcAnalisi.getAll({ codCommessa: this.codCommessa }).subscribe(response => {

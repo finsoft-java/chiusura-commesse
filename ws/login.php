@@ -43,7 +43,7 @@ function check_and_load_user($username, $pwd) {
         $user->nome = 'User';
         $user->cognome = 'Finsoft';
         $user->email = 'alessandro.barsanti@it-present.com';
-        $user->ruolo = 'validatore';
+        $user->ruolo = 'readwrite';
         return $user;
     }
 

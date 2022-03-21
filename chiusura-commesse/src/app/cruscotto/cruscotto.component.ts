@@ -35,6 +35,7 @@ export class CruscottoComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.utentePrivilegiato = localStorage.getItem('role') === 'readwrite';
     this.filtroCommessa = this.route.snapshot.queryParamMap.get('commessa') || '';
     this.getAll();
     this.timer = window.setInterval(() => {
