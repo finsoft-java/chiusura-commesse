@@ -8,7 +8,7 @@ define('JWT_SECRET_KEY', 'OSAISECRET2021');
 define('AD_SERVER', 'ldap://osai.loc');
 define('AD_DOMAIN', 'OSAI.LOC');
 define('AD_BASE_DN', "dc=OSAI,dc=LOC");
-define('AD_FILTER_READONLY', '(objectclass=person)');
+define('AD_FILTER_READONLY', '');
 define('AD_FILTER_READWRITE', '(objectclass=person)');
 // define('AD_FILTER', '(&(|(objectclass=person))(|(|(memberof=CN=OSAI-IT Users,OU=OU Osai Groups,DC=osai,DC=loc)(primaryGroupID=1202))(|(memberof=CN=OSAI-DE Users,OU=OU Osai Groups,DC=osai,DC=loc)(primaryGroupID=2625))(|(memberof=CN=OSAI-CN Users,OU=OU Osai Groups,DC=osai,DC=loc)(primaryGroupID=3233))(|(memberof=CN=OSAI-US Users,OU=OU Osai Groups,DC=osai,DC=loc)(primaryGroupID=4426))))');
 
@@ -50,7 +50,7 @@ $CAU_AN = 'GE';
 $TP_NUMERATORE_AN = 'CG';
 $NUMERATORE_AN = 'GC';
 $EVENTO = 'COGE_E';
-$CENTRO_COSTO_AN = 'CC999';
+$CENTRO_COSTO_AN = 'CR001';
 $CONTO_Z = 'ZZCONTR';
 $CENTRO_COSTO_Z = 'ZZCONTR';
 
