@@ -19,6 +19,7 @@ export class AnteprimaGirocontoComponent implements OnInit {
     'centroCosto', 'dareAvere', 'importo'];
   dataSourceAnal = new MatTableDataSource<RigaContoAnalitica>();
   codCommessa!: string;
+  giaCliccato = false;
 
   constructor(private route: ActivatedRoute,
     private router: Router,
@@ -141,6 +142,7 @@ export class AnteprimaGirocontoComponent implements OnInit {
 
   giroconto() {
     if (confirm('Verrà emesso il giroconto. Procedere?')) {
+      this.giaCliccato = true;
       this.azioniSvc.preparaGiroconto(this.codCommessa).subscribe(response => {
         const numReg = response.value.numRegistrazione;
         this.alertService.success(`Tabelle CM popolate correttamente.

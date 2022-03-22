@@ -19,11 +19,11 @@
     width: 230px;
 }
 
-td, th {
-    text-align: center !important;
+td, th.mat-header-cell {
+    text-align: center;
 }
 
-.importi {
+td.importi, th.importi {
     text-align: right;
 }
 

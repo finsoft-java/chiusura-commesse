@@ -1,9 +1,9 @@
 <h5>Analisi commessa {{codCommessa}}</h5>
 
-<div>Tabella riassuntiva dei saldi contabili della commessa selezionata</div>
-
 <div style="margin-top:20px">Totale fatturato: {{datiCruscotto?.TOT_FATTURATO |number:'1.2' }}</div>
-<div style="margin-top:20px">Esito validazione: {{datiCruscotto ? warnings[datiCruscotto.TIPO!-1] : '' }}</div>
+<div>Esito validazione: {{datiCruscotto ? warnings[datiCruscotto.TIPO!-1] : '' }}</div>
+
+<div style="margin-top:20px">Tabella riassuntiva dei saldi contabili della commessa selezionata</div>
 <div style="margin-top:20px">
 <table mat-table [dataSource]="dataSource" class="contentTable mat-elevation-z8">
 
