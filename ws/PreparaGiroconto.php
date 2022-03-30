@@ -10,14 +10,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_logged_user_JWT();
 
-$codCommessa = isset($_GET['codCommessa']) ? $panthera->escape_string($_GET['codCommessa']) : null;
+$codCommessa = isset($_POST['codCommessa']) ? $panthera->escape_string($_POST['codCommessa']) : null;
+$dataRegistrazione = isset($_POST['dataRegistrazione']) ? $panthera->escape_string($_POST['dataRegistrazione']) : null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if ($codCommessa == null) {
         print_error(400, "Missing codCommessa");
     }
-    $numReg = $saldiManager->preparaGiroconto($codCommessa);
+    if ($dataRegistrazione == null) {
+        print_error(400, "Missing dataRegistrazione");
+    }
+    $numReg = $saldiManager->preparaGiroconto($codCommessa, $dataRegistrazione);
           
     header('Content-Type: application/json');
     echo json_encode(['value' => ['numRegistrazione' => $numReg]]);

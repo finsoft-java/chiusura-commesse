@@ -265,7 +265,7 @@ class SaldiManager {
         return [$objects, count($objects)];
     }
 
-    function preparaGiroconto($codCommessa) {
+    function preparaGiroconto($codCommessa, $dataRegistrazione) {
         global $panthera, $logged_user, $ID_AZIENDA, $DATASET, $SUBSET, $NUMERATORE,
             $CAU_CONTABILE, $ORIGINE, $TP_NUMERATORE_AN, $NUMERATORE_AN, $EVENTO,
             $CENTRO_COSTO, $CENTRO_COSTO_AN, $CONTO_Z, $CENTRO_COSTO_Z, $matrice_conti;
@@ -383,10 +383,10 @@ class SaldiManager {
                         '' as TRADSAGG,
                         '' as TIPO_CLIFOR,
                         RTRIM(S.GPV0CD) as COD_CONTO,
-                        CONVERT(DATE,GETDATE()) as DATA_REG,
+                        '$dataRegistrazione' as DATA_REG,
                         '1753-01-01' as DATA_OPERAZ,
                         '1753-01-01' as DATA_IVA,
-                        CONVERT(DATE,GETDATE()) as DATA_DOC,
+                        '$dataRegistrazione' as DATA_DOC,
                         '1753-01-01' as DATA_VALUTA,
                         '1753-01-01' as DATA_SCAD_PAG,
                         RTRIM(MAX(PARTITE.MAPAAPAR)) as ANNO_PARTITA,
@@ -455,10 +455,10 @@ class SaldiManager {
                         '' as TRADSAGG,
                         '' as TIPO_CLIFOR,
                         $decode_conto as COD_CONTO,
-                        CONVERT(DATE,GETDATE()) as DATA_REG,
+                        '$dataRegistrazione' as DATA_REG,
                         '1753-01-01' as DATA_OPERAZ,
                         '1753-01-01' as DATA_IVA,
-                        CONVERT(DATE,GETDATE()) as DATA_DOC,
+                        '$dataRegistrazione' as DATA_DOC,
                         '1753-01-01' as DATA_VALUTA,
                         '1753-01-01' as DATA_SCAD_PAG,
                         RTRIM(MAX(PARTITE.MAPAAPAR)) as ANNO_PARTITA,
@@ -627,8 +627,8 @@ class SaldiManager {
                         '$ORIGINE' as ORIGINE,
                         '$TP_NUMERATORE_AN' as TIPO_NUMERATORE,
                         S.T01CD as COD_AZIENDA,
-                        CONVERT(DATE,GETDATE()) as DATA_REG,
-                        CONVERT(DATE,GETDATE()) as DATA_COMPETENZA,
+                        '$dataRegistrazione' as DATA_REG,
+                        '$dataRegistrazione' as DATA_COMPETENZA,
                         '$SUBSET' as SUBSET,
                         '' as VERSIONE,
                         '$EVENTO' as EVENTO,
@@ -735,7 +735,6 @@ class SaldiManager {
                         and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                    --GROUP BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD,CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END
                     GROUP BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD
                     HAVING SUM(S.GSL0AUCA-S.GSL0DUCA)<>0
                 UNION
@@ -752,8 +751,8 @@ class SaldiManager {
                         '$ORIGINE' as ORIGINE,
                         '$TP_NUMERATORE_AN' as TIPO_NUMERATORE,
                         S.T01CD as COD_AZIENDA,
-                        CONVERT(DATE,GETDATE()) as DATA_REG,
-                        CONVERT(DATE,GETDATE()) as DATA_COMPETENZA,
+                        '$dataRegistrazione' as DATA_REG,
+                        '$dataRegistrazione' as DATA_COMPETENZA,
                         '$SUBSET' as SUBSET,
                         '' as VERSIONE,
                         '$EVENTO' as EVENTO,
@@ -860,7 +859,6 @@ class SaldiManager {
                         and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                    --GROUP BY S.T01CD,S.T36CD,S.GPV0CD,S.GPD0CD,S.GPC0CD,S.GPS2CD,S.GPS3CD,CASE WHEN CLICD !='' THEN S.CLICD ELSE S.GPS4CD END
                     GROUP BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD
                     HAVING SUM(S.GSL0AUCA-S.GSL0DUCA)<>0
                 ";

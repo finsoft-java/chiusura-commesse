@@ -25,6 +25,7 @@ import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatDialogModule } from '@angular/material/dialog';
 import { LoginComponent } from './login/login.component';
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
@@ -35,6 +36,8 @@ import { JwtInterceptor } from './_helpers/jwt.interceptor';
 import { CruscottoComponent } from './cruscotto/cruscotto.component';
 import { AnalisiCommessaComponent } from './analisi-commessa/analisi-commessa.component';
 import { AnteprimaGirocontoComponent } from './anteprima-giroconto/anteprima-giroconto.component';
+import { DialogGirocontoComponent } from './dialog-giroconto/dialog-giroconto.component';
+import { DialogWorkflowComponent } from './dialog-workflow/dialog-workflow.component';
 
 registerLocaleData(localeIt);
 
@@ -46,7 +49,9 @@ registerLocaleData(localeIt);
     LoginComponent,
     CruscottoComponent,
     AnalisiCommessaComponent,
-    AnteprimaGirocontoComponent
+    AnteprimaGirocontoComponent,
+    DialogGirocontoComponent,
+    DialogWorkflowComponent
   ],
   imports: [
     HttpClientModule,
@@ -74,12 +79,13 @@ registerLocaleData(localeIt);
     MatCheckboxModule,
     MatExpansionModule,
     MatAutocompleteModule,
+    MatDialogModule,
     NgxMatSelectSearchModule
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
-    { provide: LOCALE_ID, useValue: 'it-IT'}
+    { provide: LOCALE_ID, useValue: 'it-IT' }
   ],
   bootstrap: [AppComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]

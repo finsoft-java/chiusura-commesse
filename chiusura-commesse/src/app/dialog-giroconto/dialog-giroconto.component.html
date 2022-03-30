@@ -1,0 +1,16 @@
+<h1 mat-dialog-title>Conferma creazione giroconto</h1>
+<div mat-dialog-content>
+  <mat-form-field appearance="fill">
+    <mat-label>Data registrazione</mat-label>
+    <input matInput readonly [ngModelOptions]="{standalone: true}" [(ngModel)]="data.dataRegistrazione" [matDatepicker]="picker1">
+    <mat-datepicker-toggle matSuffix [for]="picker1">
+        <mat-icon matDatepickerToggleIcon>keyboard_arrow_down</mat-icon>
+    </mat-datepicker-toggle>
+    <mat-datepicker #picker1></mat-datepicker>
+</mat-form-field>
+
+</div>
+<div mat-dialog-actions>
+  <button mat-button [mat-dialog-close]="false">Annulla</button>
+  <button mat-button [mat-dialog-close]="getDataFormattata()" cdkFocusInitial>OK</button>
+</div>

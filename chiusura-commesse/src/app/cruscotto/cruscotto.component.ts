@@ -1,6 +1,8 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
+import { DialogWorkflowComponent } from '../dialog-workflow/dialog-workflow.component';
 import { VistaCruscotto } from '../_models';
 import { AlertService } from '../_services/alert.service';
 import { AzioniService } from '../_services/azioni.service';
@@ -31,7 +33,8 @@ export class CruscottoComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private svc: CruscottoService,
     private azioniSvc: AzioniService,
-    private alertService: AlertService) {
+    private alertService: AlertService,
+    public dialogWf: MatDialog) {
   }
 
   ngOnInit(): void {
@@ -73,15 +76,19 @@ export class CruscottoComponent implements OnInit, OnDestroy {
   }
 
   avanzamentoWorkflow(row: VistaCruscotto) {
-    if (confirm('Il workflow verrà avanzato in stato "A Ricavo". Procedere?')) {
-      this.azioniSvc.avanzamentoWorkflow(row.COD_COMMESSA).subscribe(response => {
-        this.getAll();
-        this.alertService.success('Stato workflow modificato correttamente.');
-      },
-      error => {
-        this.alertService.error(error);
-      });
-    }
+    const dialogRef = this.dialogWf.open(DialogWorkflowComponent);
+
+    dialogRef.afterClosed().subscribe(ok => {
+      if (ok) {
+        this.azioniSvc.avanzamentoWorkflow(row.COD_COMMESSA).subscribe(response => {
+          this.getAll();
+          this.alertService.success('Stato workflow modificato correttamente.');
+        },
+        error => {
+          this.alertService.error(error);
+        });
+      }
+    });
   }
 
   giroconto(row: VistaCruscotto) {

@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
+import { DialogGirocontoComponent } from '../dialog-giroconto/dialog-giroconto.component';
 import { RigaConto, RigaContoAnalitica, VistaAnalisiCommessa, VistaCruscotto } from '../_models';
 import { AlertService } from '../_services/alert.service';
 import { AnalisiCommesseService } from '../_services/analisi.commesse.service';
@@ -26,7 +28,8 @@ export class AnteprimaGirocontoComponent implements OnInit {
     private svcCruscotto: CruscottoService,
     private svcAnalisi: AnalisiCommesseService,
     private azioniSvc: AzioniService,
-    private alertService: AlertService) { }
+    private alertService: AlertService,
+    public dialogoGiroconto: MatDialog) { }
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
@@ -141,19 +144,23 @@ export class AnteprimaGirocontoComponent implements OnInit {
   }
 
   giroconto() {
-    if (confirm('Verrà emesso il giroconto. Procedere?')) {
-      this.giaCliccato = true;
-      this.azioniSvc.preparaGiroconto(this.codCommessa).subscribe(response => {
-        const numReg = response.value.numRegistrazione;
-        this.alertService.success(`Tabelle CM popolate correttamente.
-        Procedere con il CM in Panthera selezionando Origine=RIC-COMM.
-        Numero registrazione ${numReg}.
-        `);
-      },
-      error => {
-        this.alertService.error(error);
-      });
-    }
+    const dialogRef = this.dialogoGiroconto.open(DialogGirocontoComponent, { data: { dataRegistrazione: null } });
+
+    dialogRef.afterClosed().subscribe(dataRegistrazione => {
+      if (dataRegistrazione) {
+        this.giaCliccato = true;
+        this.azioniSvc.preparaGiroconto(this.codCommessa, dataRegistrazione).subscribe(response => {
+          const numReg = response.value.numRegistrazione;
+          this.alertService.success(`Tabelle CM popolate correttamente.
+            Procedere con il CM in Panthera selezionando Origine=RIC-COMM.
+            Numero registrazione ${numReg}.
+            `);
+        },
+        error => {
+          this.alertService.error(error);
+        });
+      }
+    });
   }
 
   back() {
