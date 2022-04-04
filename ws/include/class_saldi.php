@@ -66,6 +66,7 @@ class SaldiManager {
                         and ('$codCommessa'='' or S.GPD0CD='$codCommessa')
                         and ('$filtroCommessa'='' or UPPER(S.GPD0CD) LIKE UPPER('%$filtroCommessa%'))
                         -- and CD.WF_NODE_ID='$STATO_WF_START'
+						and CD.WF_NODE_ID IS NOT NULL
                     GROUP BY
                         S.T01CD,S.GPV0CD,S.GPD0CD,S.T36CD,S.GPC0CD,S.GSL0AUCA,S.GSL0DUCA,
                         VOC.VOCDSNOR,
@@ -183,7 +184,7 @@ class SaldiManager {
                         and S.GPC0CD = '$CENTRO_COSTO'
                         and not (S.GSL0DUCA = 0 and S.GSL0AUCA = 0)
                         and S.GPD0CD = '$codCommessa'
-                        and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
+                        -- and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
                     ORDER BY S.T01CD,S.GAT0CD,S.GPV0CD,S.GPS2CD";
             $objects = $panthera->select_list($sql1);
         }
@@ -245,7 +246,7 @@ class SaldiManager {
                         and S.GPC0CD = '$CENTRO_COSTO'
                         and not (S.GSL0DUCA = 0 and S.GSL0AUCA = 0)
                         and S.GPD0CD = '$codCommessa'
-                        and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
+                        -- and S.GPV0CD in ($conti_transitori_imploded, $conti_ricavi_imploded)
                     GROUP BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD
                     HAVING SUM(S.GSL0AUCA-S.GSL0DUCA)<>0
                     ORDER BY S.T01CD,S.GPV0CD,S.GPS2CD";
