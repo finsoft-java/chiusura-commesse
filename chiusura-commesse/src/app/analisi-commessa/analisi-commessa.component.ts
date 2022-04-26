@@ -19,13 +19,12 @@ export class AnalisiCommessaComponent implements OnInit {
   codCommessa!: string;
   datiCruscotto!: VistaCruscotto;
   utentePrivilegiato = true;
-  warnings = [
-    'Giroconto non necessario, si può procedere all\'avanzamento del workflow',
-    'Si può procedere al giroconto',
-    'Giroconto parziale',
-    'Squadratura',
-    'Verificare conto'
-  ];
+  warnings: any = {
+    'verifica.conti': 'Verificare conti',
+    'diff.fatturato': 'Differenza tra transitorio+ricavi e fatturato',
+    'giroconto.parziale': 'Giroconto parziale',
+    none: ''
+  }
 
   constructor(
     private route: ActivatedRoute,
@@ -83,5 +82,18 @@ export class AnalisiCommessaComponent implements OnInit {
 
   giroconto(row: VistaCruscotto) {
     this.router.navigate(['anteprima-giroconto', row.COD_COMMESSA]);
+  }
+
+  getValidazione(): string {
+    if (this.datiCruscotto) {
+      if (this.warnings[this.datiCruscotto.WARNING!]) {
+        return this.warnings[this.datiCruscotto.WARNING!];
+      }
+      if (this.datiCruscotto.SALDO_CONTO_TRANSITORIO === 0.0) {
+        return 'Giroconto non necessario, è possibile avanzare il workflow';
+      }
+      return 'Nessuna anomalia rilevata, è possibile creare il giroconto';
+    }
+    return '';
   }
 }

@@ -8,6 +8,7 @@ In questa schermata vengono presentate tutte le commesse in stato workflow "Inst
     <mat-form-field class="example-full-width">
         <input matInput placeholder="Filtra per commessa...." [(ngModel)]="filtroCommessa" (change)="filtra()">
     </mat-form-field>
+    <mat-checkbox (change)="changeFiltroAll($event)">Tutte</mat-checkbox>
 </div>
 <div style="margin-top:10px">
 <table mat-table [dataSource]="dataSource" class="contentTable mat-elevation-z8">
@@ -46,20 +47,20 @@ In questa schermata vengono presentate tutte le commesse in stato workflow "Inst
     </ng-container>
     <ng-container matColumnDef="warning">
         <th mat-header-cell *matHeaderCellDef> Esito validazione </th>
-        <td mat-cell *matCellDef="let element"> {{ warnings[element.TIPO-1] }} </td>
+        <td mat-cell *matCellDef="let element"> {{ warnings[element.WARNING] }} </td>
     </ng-container>
 
     <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef> Azioni </th>
         <td mat-cell *matCellDef="let element">
             <button mat-raised-button color="primary" (click)="analisi(element)">Analisi</button><br/>
-            <button *ngIf="utentePrivilegiato && element.TIPO==1" mat-raised-button color="warn"
+            <button *ngIf="utentePrivilegiato &&  element.AZIONI === 'wf'" mat-raised-button color="warn"
                 (click)="avanzamentoWorkflow(element)"
                 >Avanzamento WF</button>
-            <button *ngIf="utentePrivilegiato && element.TIPO!==1" mat-raised-button color="warn"
+            <button *ngIf="utentePrivilegiato && element.AZIONI !== 'wf'" mat-raised-button color="secondary"
                 (click)="giroconto(element)"
-                [disabled]="element.TIPO>=4"
-                [title]="element.TIPO>=4 ? 'Prima occorre risolvere le anomalie in Panthera': ''"
+                [disabled]="element.AZIONI === 'none'"
+                [title]="element.AZIONI === 'none' ? 'Prima occorre risolvere le anomalie in Panthera': ''"
                 >Giroconto</button>
         </td>
     </ng-container>

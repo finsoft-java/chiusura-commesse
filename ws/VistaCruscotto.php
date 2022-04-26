@@ -12,11 +12,12 @@ require_logged_user_JWT();
 
 $codCommessa = isset($_GET['codCommessa']) ? $panthera->escape_string($_GET['codCommessa']) : null;
 $filtroCommessa = isset($_GET['filtroCommessa']) ? $panthera->escape_string($_GET['filtroCommessa']) : null;
+$includeAll = isset($_GET['includeAll']) ? $panthera->escape_string($_GET['includeAll']) : 'false';
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
     if ($codCommessa == null) {
-        [$list, $count] = $saldiManager->getVistaCruscotto('', $filtroCommessa);
+        [$list, $count] = $saldiManager->getVistaCruscotto('', $filtroCommessa, $includeAll);
           
         header('Content-Type: application/json');
         echo json_encode(['data' => $list, 'count' => $count]);

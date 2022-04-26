@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { MatCheckboxChange } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -18,16 +19,16 @@ export class CruscottoComponent implements OnInit, OnDestroy {
     'contoTransitorio', 'saldoTr', 'contoRicavi', 'saldoRicavi', 'warning', 'actions'];
   dataSource = new MatTableDataSource<VistaCruscotto>();
   utentePrivilegiato = true;
-  warnings = [
-    '',
-    '',
-    'Giroconto parziale',
-    'Squadratura',
-    'Verificare conto'
-  ];
+  warnings: any = {
+    'verifica.conti': 'Verificare conti',
+    'diff.fatturato': 'Differenza con fatturato',
+    'giroconto.parziale': 'Giroconto parziale',
+    none: ''
+  }
   REFRESH_DELAY = 60; // refresh every REFRESH_DELAY seconds
   timer?: number;
   filtroCommessa: string = '';
+  filtroIncludeAll = false;
 
   constructor(private router: Router,
     private route: ActivatedRoute,
@@ -40,6 +41,7 @@ export class CruscottoComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.utentePrivilegiato = localStorage.getItem('role') === 'readwrite';
     this.filtroCommessa = this.route.snapshot.queryParamMap.get('commessa') || '';
+    this.filtroIncludeAll = this.route.snapshot.queryParamMap.get('includeAll') === 'true' || false;
     this.getAll();
     this.timer = window.setInterval(() => {
       this.getAll();
@@ -51,7 +53,10 @@ export class CruscottoComponent implements OnInit, OnDestroy {
   }
 
   getAll(): void {
-    this.svc.getAll({ filtroCommessa: this.filtroCommessa }).subscribe(response => {
+    this.svc.getAll({
+      filtroCommessa: this.filtroCommessa,
+      includeAll: this.filtroIncludeAll
+    }).subscribe(response => {
       this.dataSource = new MatTableDataSource<VistaCruscotto>(response.data);
     },
     error => {
@@ -62,13 +67,24 @@ export class CruscottoComponent implements OnInit, OnDestroy {
   filtra(): void {
     localStorage.setItem('filtroCommessa', this.filtroCommessa);
 
-    if (this.filtroCommessa) {
-      this.router.navigate(['cruscotto'], { queryParams: { commessa: this.filtroCommessa } });
+    if (this.filtroCommessa || this.filtroIncludeAll) {
+      this.router.navigate(['cruscotto'], {
+        queryParams: {
+          commessa: this.filtroCommessa,
+          includeAll: this.filtroIncludeAll ? 'true' : undefined
+        }
+      });
     } else {
       this.router.navigate(['cruscotto']);
     }
     // in questo caso il router cambia l'URL ma non ricarica il componente
     this.getAll();
+  }
+
+  changeFiltroAll(evento: MatCheckboxChange) {
+    this.filtroIncludeAll = evento.checked;
+    localStorage.setItem('filtroAll', evento.checked ? 'true' : 'false');
+    this.filtra();
   }
 
   analisi(row: VistaCruscotto) {

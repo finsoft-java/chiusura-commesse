@@ -7,7 +7,7 @@ $saldiManager = new SaldiManager();
 class SaldiManager {
     
 
-    function getVistaCruscotto($codCommessa='', $filtroCommessa='') {
+    function getVistaCruscotto($codCommessa='', $filtroCommessa='', $includeAll='false') {
         global $matrice_conti, $panthera, $ID_AZIENDA, $DATASET, $SUBSET, $STATO_WF_START, $CENTRO_COSTO;
 
         if ($panthera->mock) {
@@ -66,7 +66,7 @@ class SaldiManager {
                         and ('$codCommessa'='' or S.GPD0CD='$codCommessa')
                         and ('$filtroCommessa'='' or UPPER(S.GPD0CD) LIKE UPPER('%$filtroCommessa%'))
                         -- and CD.WF_NODE_ID='$STATO_WF_START'
-						and CD.WF_NODE_ID IS NOT NULL
+						and (CD.WF_NODE_ID IS NOT NULL or '$includeAll'='true')
                     GROUP BY
                         S.T01CD,S.GPV0CD,S.GPD0CD,S.T36CD,S.GPC0CD,S.GSL0AUCA,S.GSL0DUCA,
                         VOC.VOCDSNOR,

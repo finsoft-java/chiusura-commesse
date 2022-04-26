@@ -15,6 +15,9 @@ export class CruscottoService implements HttpCrudService<VistaCruscotto> {
     if (parameters.filtroCommessa) {
       queryParams = queryParams.append('filtroCommessa', parameters.filtroCommessa);
     }
+    if (parameters.includeAll) {
+      queryParams = queryParams.append('includeAll', 'true');
+    }
     return this.http.get<ListBean<VistaCruscotto>>(environment.wsUrl + 'VistaCruscotto.php', { params: queryParams }).pipe(
       map(l => {
         if (l.data) {
@@ -53,17 +56,31 @@ export class CruscottoService implements HttpCrudService<VistaCruscotto> {
     x.CONTO_TRANSITORIO = x.CONTO_TRANSITORIO || '';
     x.CONTO_RICAVI = x.CONTO_RICAVI || '';
 
-    if (x.CONTO_TRANSITORIO.includes(';') || x.CONTO_RICAVI === '' || x.CONTO_RICAVI.includes(';')) {
-      x.TIPO = 5; // c'è qualche problema (conti non ben determinati), l'utente deve correggere in Panthera
-    } else if (x.TOT_FATTURATO !== (x.SALDO_CONTO_RICAVI + x.SALDO_CONTO_TRANSITORIO)) {
-      x.TIPO = 4; // c'è qualche problema (squadratura), l'utente deve correggere in Panthera
-    } else if (x.SALDO_CONTO_TRANSITORIO === 0.0) {
-      x.TIPO = 1; // non serve giroconto, si può chiudere
-    } else if (x.SALDO_CONTO_RICAVI === 0.0) {
-      x.TIPO = 2; // serve giroconto, poi diventa di tipo 1
+    if (x.SALDO_CONTO_TRANSITORIO === 0.0) {
+      // POSSO FARE AVANZAMENTO WORKFLOW
+      x.AZIONI = 'wf';
+      if (x.CONTO_RICAVI === '' || x.CONTO_RICAVI.includes(';')) {
+        x.WARNING = 'verifica.conti'; // c'è qualche problema (conti non ben determinati), solo warning
+      } else if (x.TOT_FATTURATO !== (x.SALDO_CONTO_RICAVI + x.SALDO_CONTO_TRANSITORIO)) {
+        x.WARNING = 'diff.fatturato'; // c'è qualche problema (squadratura), solo warning
+      } else if (x.SALDO_CONTO_TRANSITORIO === 0.0) {
+        x.WARNING = 'none'; // non serve giroconto, si può chiudere
+      }
     } else {
-      x.TIPO = 3; // serve giroconto (parziale) e anche una verifica da parte dell'utente, poi diventa di tipo 1
+      // DOVREI FARE GIROCONTO
+      x.AZIONI = 'giroconto';
+      if (x.CONTO_TRANSITORIO.includes(';') || x.CONTO_RICAVI === '' || x.CONTO_RICAVI.includes(';')) {
+        x.AZIONI = 'none';
+        x.WARNING = 'verifica.conti'; // c'è qualche problema (conti non ben determinati), l'utente deve correggere in Panthera
+      } else if (x.TOT_FATTURATO !== (x.SALDO_CONTO_RICAVI + x.SALDO_CONTO_TRANSITORIO)) {
+        x.WARNING = 'diff.fatturato'; // c'è qualche problema (squadratura), solo warning
+      } else if (x.SALDO_CONTO_RICAVI > 0.0) {
+        x.WARNING = 'giroconto.parziale'; // serve giroconto parziale (warning), poi diventa di tipo 1
+      } else {
+        x.WARNING = 'none'; // serve giroconto, poi diventa di tipo 1
+      }
     }
+
     return x;
   }
 }

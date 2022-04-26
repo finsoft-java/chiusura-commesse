@@ -1,7 +1,7 @@
 <h5>Analisi commessa {{codCommessa}}</h5>
 
 <div style="margin-top:20px">Totale fatturato: {{datiCruscotto?.TOT_FATTURATO |number:'1.2' }}</div>
-<div>Esito validazione: {{datiCruscotto ? warnings[datiCruscotto.TIPO!-1] : '' }}</div>
+<div>Esito validazione: {{ getValidazione() }}</div>
 
 <div style="margin-top:20px">Tabella riassuntiva dei saldi contabili della commessa selezionata</div>
 <div style="margin-top:20px">
@@ -87,13 +87,13 @@
 </div>
 
 <div style="margin-top:20px">
-<button *ngIf="datiCruscotto && utentePrivilegiato && datiCruscotto.TIPO==1" mat-raised-button color="warn"
+<button *ngIf="datiCruscotto && utentePrivilegiato && datiCruscotto.AZIONI === 'wf'" mat-raised-button color="warn"
                 (click)="avanzamentoWorkflow(datiCruscotto)"
                 >Avanzamento WF</button>
-<button *ngIf="datiCruscotto && utentePrivilegiato && datiCruscotto.TIPO!==1" mat-raised-button color="warn"
+<button *ngIf="datiCruscotto && utentePrivilegiato && datiCruscotto.AZIONI !== 'wf'" mat-raised-button color="warn"
     (click)="giroconto(datiCruscotto)"
-    [disabled]="datiCruscotto.TIPO! >= 4"
-    [title]="datiCruscotto.TIPO! >= 4 ? 'Prima occorre risolvere le anomalie in Panthera': ''"
+    [disabled]="datiCruscotto.AZIONI === 'none'"
+    [title]="datiCruscotto.AZIONI === 'none' ? 'Prima occorre risolvere le anomalie in Panthera': ''"
     >Giroconto</button>
 <button mat-raised-button color="" (click)="back()">Ritorna al cruscotto</button>
 </div>

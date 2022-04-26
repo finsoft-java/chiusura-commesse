@@ -13,5 +13,6 @@ export interface VistaCruscotto {
   DES_CONTO_RICAVI: string;
   SALDO_CONTO_RICAVI: number;
   CENTRO_COSTO: string;
-  TIPO?: number;
+  AZIONI?: 'wf'|'giroconto'|'none'
+  WARNING?: 'verifica.conti'|'diff.fatturato'|'giroconto.parziale'|'none'
 }
