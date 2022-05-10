@@ -16,7 +16,7 @@ import { CruscottoService } from '../_services/cruscotto.service';
 })
 export class CruscottoComponent implements OnInit, OnDestroy {
   displayedColumns: string[] = ['commessa', 'divisione', 'cliente', 'fatturato',
-    'contoTransitorio', 'saldoTr', 'contoRicavi', 'saldoRicavi', 'warning', 'actions'];
+    'contoTransitorio', 'saldoTr', 'contoRicavi', 'saldoRicavi', 'warning', 'statoCommessa', 'actions'];
   dataSource = new MatTableDataSource<VistaCruscotto>();
   utentePrivilegiato = true;
   warnings: any = {

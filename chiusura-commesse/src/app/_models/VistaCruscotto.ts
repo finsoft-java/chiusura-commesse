@@ -1,6 +1,7 @@
 export interface VistaCruscotto {
   COD_COMMESSA: string;
   DES_COMMESSA: string;
+  DES_WF: string;
   COD_DIVISIONE: string;
   DES_DIVISIONE: string;
   COD_CLIENTE: string;
