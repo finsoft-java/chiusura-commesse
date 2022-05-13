@@ -67,11 +67,14 @@ class PantheraManager {
         // SE TI SERVE FARE DEBUG: print_r($sql); print("\n");
 
         if ($result = sqlsrv_query($this->conn, $sql)) {
-            $arr = array();
+			$arr = array();
             while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC))
             {
-                $arr[] = $row;
+				$arr[] = $row;
             }
+			if ($row === false) {
+				print_error(500, $this->fmt_errors());
+			}
             return $arr;
         } else {
             print_error(500, $this->fmt_errors());
@@ -88,6 +91,9 @@ class PantheraManager {
             {
                 $arr[] = $row[0];
             }
+			if ($row === false) {
+				print_error(500, $this->fmt_errors());
+			}
             return $arr;
         } else {
             print_error(500, $this->fmt_errors());
@@ -102,7 +108,9 @@ class PantheraManager {
             if ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC))
             {
                 return $row;
-            } else {
+            } elseif ($row === false) {
+				print_error(500, $this->fmt_errors());
+			} else {
                 return null;
             }
         } else {
@@ -118,7 +126,9 @@ class PantheraManager {
             if ($row = sqlsrv_fetch_array($result))
             {
                 return $row[0];
-            } else {
+            } elseif ($row === false) {
+				print_error(500, $this->fmt_errors());
+			} else {
                 return null;
             }
         } else {
