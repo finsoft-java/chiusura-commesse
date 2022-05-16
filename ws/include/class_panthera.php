@@ -8,6 +8,22 @@ class PantheraManager {
         $this->mock = (MOCK_PANTHERA == 'true');
         $this->conn = null;
     }
+
+    function connect() {
+        if (!$this->mock) {
+            // echo "Connecting..." . DB_PTH_HOST;
+            $this->conn = sqlsrv_connect(DB_PTH_HOST, array(
+                                    "Database" => DB_PTH_NAME,
+                                    "UID" => DB_PTH_USER,
+                                    "PWD" => DB_PTH_PASS,
+                                    "CharacterSet" => "UTF-8"));
+            // echo "Done.";
+            // var_dump($this->conn);
+            if ($this->conn == false) {
+                print_error(500, "Failed to connect: " . $this->fmt_errors());
+            }
+        }
+    }
     
     /**
      * Similar to mysql conn->escape_string()
@@ -41,21 +57,6 @@ class PantheraManager {
             return "[SQLSTATE $error[SQLSTATE]] [SQLCODE $error[code]] $error[message]"; 
         } else {
             return "No error";
-        }
-    }
-
-    function connect() {
-        if (!$this->mock) {
-            // echo "Connecting..." . DB_PTH_HOST;
-            $this->conn = sqlsrv_connect(DB_PTH_HOST, array(
-                                    "Database" => DB_PTH_NAME,  
-                                    "UID" => DB_PTH_USER,
-                                    "PWD" => DB_PTH_PASS));
-            // echo "Done.";
-            // var_dump($this->conn);
-            if ($this->conn == false) {
-                print_error(500, "Failed to connect: " . $this->fmt_errors());
-            }
         }
     }
 
