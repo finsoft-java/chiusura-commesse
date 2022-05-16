@@ -16,6 +16,7 @@ class PantheraManager {
                                     "Database" => DB_PTH_NAME,
                                     "UID" => DB_PTH_USER,
                                     "PWD" => DB_PTH_PASS,
+                                    // "ReturnDatesAsStrings" => true 
                                     "CharacterSet" => "UTF-8"));
             // echo "Done.";
             // var_dump($this->conn);
