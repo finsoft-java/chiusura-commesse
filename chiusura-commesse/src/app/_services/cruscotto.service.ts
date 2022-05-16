@@ -31,7 +31,9 @@ export class CruscottoService implements HttpCrudService<VistaCruscotto> {
   }
 
   getById(codCommessa: string): Observable<ValueBean<VistaCruscotto>> {
-    return this.http.get<ValueBean<VistaCruscotto>>(environment.wsUrl + `VistaCruscotto.php?codCommessa=${codCommessa}`).pipe(
+    let queryParams = new HttpParams();
+    queryParams = queryParams.append('codCommessa', codCommessa);
+    return this.http.get<ValueBean<VistaCruscotto>>(environment.wsUrl + 'VistaCruscotto.php', { params: queryParams }).pipe(
       map(v => {
         this.validazione(v.value);
         return v;
