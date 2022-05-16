@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode(['data' => $list, 'count' => $count]);
 
     } else {
-        [$list, $count] = $saldiManager->getVistaCruscotto($codCommessa);
+        [$list, $count] = $saldiManager->getVistaCruscotto($codCommessa, '', 'true');
         if ($count == 0) {
             print_error(404, "Commessa non trovata: $codCommessa");
         }
