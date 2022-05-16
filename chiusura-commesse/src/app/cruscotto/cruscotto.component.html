@@ -8,7 +8,7 @@ In questa schermata vengono presentate tutte le commesse in stato workflow "Inst
     <mat-form-field class="example-full-width">
         <input matInput placeholder="Filtra per commessa...." [(ngModel)]="filtroCommessa" (change)="filtra()">
     </mat-form-field>
-    <mat-checkbox (change)="changeFiltroAll($event)">Tutte</mat-checkbox>
+    <mat-checkbox [checked]="filtroIncludeAll" (change)="changeFiltroAll($event)">Tutte</mat-checkbox>
 </div>
 <div style="margin-top:10px">
 <table mat-table [dataSource]="dataSource" class="contentTable mat-elevation-z8">

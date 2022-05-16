@@ -62,11 +62,12 @@ export class AnalisiCommessaComponent implements OnInit {
   }
 
   back() {
-    if (localStorage.getItem('filtroCommessa')) {
-      this.router.navigate(['cruscotto'], { queryParams: { commessa: localStorage.getItem('filtroCommessa') } });
-    } else {
-      this.router.navigate(['cruscotto']);
-    }
+    this.router.navigate(['cruscotto'], {
+      queryParams: {
+        commessa: localStorage.getItem('filtroCommessa') ? localStorage.getItem('filtroCommessa') : undefined,
+        includeAll: localStorage.getItem('filtroAll') ? 'true' : undefined
+      }
+    });
   }
 
   avanzamentoWorkflow(row: VistaCruscotto) {
