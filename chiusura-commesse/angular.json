@@ -63,6 +63,33 @@
                   "maximumError": "4kb"
                 }
               ]
+            },
+            "test": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.test.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "namedChunks": false,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kb",
+                  "maximumError": "3mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "2kb",
+                  "maximumError": "4kb"
+                }
+              ]
             }
           }
         },
@@ -74,6 +101,9 @@
           "configurations": {
             "production": {
               "browserTarget": "chiusura-commesse:build:production"
+            },
+            "test": {
+              "browserTarget": "chiusura-commesse:build:test"
             }
           }
         },
@@ -122,6 +152,9 @@
           "configurations": {
             "production": {
               "devServerTarget": "chiusura-commesse:serve:production"
+            },
+            "test": {
+              "devServerTarget": "chiusura-commesse:serve:test"
             }
           }
         }
