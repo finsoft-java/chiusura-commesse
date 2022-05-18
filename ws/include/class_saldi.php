@@ -363,7 +363,7 @@ class SaldiManager {
                         TRATESTO,TRADSCOM,MOVNUCIS,T25CD,T26CD,T28CD,T66TPCNT,MOVT61CD,MOVVCACD,T04CD,
                         TRATICAU
                         )
-                    SELECT
+                        SELECT
                         '$utente' as UTENTE_CRZ,
                         CONVERT(DATE,GETDATE()) as DATA_CRZ,
                         CONVERT(TIME, GETDATE()) as ORA_CRZ,
@@ -374,7 +374,7 @@ class SaldiManager {
                         '$utente' as T96CD,
                         RTRIM(S.T01CD) as COD_AZIENDA,
                         $numReg as NUM_REG,
-                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD)) * 2 - 1 as NUM_RIGA,
+                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD,S.GTR1DTRE,S.GTR1RFDC)) * 2 - 1 as NUM_RIGA,
                         0 as TRANPRGT,
                         0 as WTRNRLOG,
                         '1' as STATO,
@@ -392,14 +392,17 @@ class SaldiManager {
                         '$dataRegistrazione' as DATA_DOC,
                         '1753-01-01' as DATA_VALUTA,
                         '1753-01-01' as DATA_SCAD_PAG,
-                        RTRIM(MAX(PARTITE.MAPAAPAR)) as ANNO_PARTITA,
-                        RTRIM(MAX(PARTITE.MAPNRPAR)) as NR_PARTITA,
+                        --RTRIM(MAX(PARTITE.MAPAAPAR)) as ANNO_PARTITA,
+                        --RTRIM(MAX(PARTITE.MAPNRPAR)) as NR_PARTITA,
+                        YEAR(S.GTR1DTRE) as ANNO_PARTITA,
+                        RTRIM(S.GTR1RFDC) as NR_PARTITA,
                         '0'as TRANPIVA,
                         '1' as TRATPVAL,
                         '' as MOD_PAG,
                         '' as VALUTA,
                         '1' as TRASEGNO,
-                        SUM(S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,
+                        --SUM(S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,
+                        SUM(CASE WHEN (GTR1SECO = 2) THEN GTR1IUCA ELSE -GTR1IUCA END) as TRAIMPVP,
                         '0' as TRAIIVVP,
                         '0' as TRAIVAVP,
                         RTRIM(S.GPD0CD) as MOVT62CD,
@@ -410,30 +413,23 @@ class SaldiManager {
                         '','','','','','','','','','',
                         '','','','','','','','','','',
                         ''
-                    FROM FINANCE.GSL0PT S
+                    FROM FINANCE.GTR1PT S    -- was: FINANCE.GSL0PT S
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
                     LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
-                    LEFT JOIN (
-                        SELECT P.T01CD, P.MAPAAPAR, P.MAPNRPAR, S.R_COMMESSA,
-                            ROW_NUMBER()OVER(PARTITION BY R_COMMESSA ORDER BY MAPAAPAR DESC,MAPNRPAR DESC) AS NUM
-                        FROM FINANCE.BCMAPPT P
-                        JOIN THIPPERS.YSTAT_FATVEN_V01 S on S.ID_AZIENDA = P.T01CD and P.MAPAAPAR = S.ANNO_FAT
-                            and P.MAPNRPAR = S.NUMERO_FATTURA 
-                        WHERE P.MAPSTAPA = 1 -- solo partite aperte
-                        ) PARTITE ON PARTITE.T01CD = S.T01CD and PARTITE.R_COMMESSA = S.GPD0CD and NUM = 1
                     WHERE S.T01CD = '$ID_AZIENDA'
                         and S.GT01CD = '$DATASET'
                         and S.GT02CD = '$SUBSET'
-                        and S.GSL0TPSL = 1
-                        and S.GS02CD = '*****'
+                        -- and S.GSL0TPSL = 1
+                        -- and S.GS02CD = '*****'
                         and S.GPV0CD not like 'ZZ%'
                         and S.GPC0CD = '$CENTRO_COSTO'
-                        and S.GSL0DUCA <> S.GSL0AUCA
+                        --and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                    GROUP BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD
-                    HAVING SUM(S.GSL0AUCA-S.GSL0DUCA)<>0
+                    GROUP BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD,S.GTR1DTRE,S.GTR1RFDC
+                    --HAVING SUM(S.GSL0AUCA-S.GSL0DUCA)<>0
+					HAVING SUM(S.GTR1IUCA) <> 0
                 UNION
                     SELECT
                         '$utente' as UTENTE_CRZ,
@@ -446,7 +442,7 @@ class SaldiManager {
                         '$utente' as T96CD,
                         RTRIM(S.T01CD) as COD_AZIENDA,
                         $numReg as NUM_REG,
-                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD)) * 2 as NUM_RIGA,
+                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD,S.GTR1DTRE,S.GTR1RFDC)) * 2 as NUM_RIGA,
                         0 as TRANPRGT,
                         0 as WTRNRLOG,
                         '1' as STATO,
@@ -464,14 +460,17 @@ class SaldiManager {
                         '$dataRegistrazione' as DATA_DOC,
                         '1753-01-01' as DATA_VALUTA,
                         '1753-01-01' as DATA_SCAD_PAG,
-                        RTRIM(MAX(PARTITE.MAPAAPAR)) as ANNO_PARTITA,
-                        RTRIM(MAX(PARTITE.MAPNRPAR)) as NR_PARTITA,
+                        --RTRIM(MAX(PARTITE.MAPAAPAR)) as ANNO_PARTITA,
+                        --RTRIM(MAX(PARTITE.MAPNRPAR)) as NR_PARTITA,
+                        YEAR(S.GTR1DTRE) as ANNO_PARTITA,
+                        RTRIM(S.GTR1RFDC) as NR_PARTITA,
                         '0'as TRANPIVA,
                         '1' as TRATPVAL,
                         '' as MOD_PAG,
                         '' as VALUTA,
                         '2' as TRASEGNO,
-                        SUM(S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,
+                        --SUM(S.GSL0AUCA-S.GSL0DUCA) as TRAIMPVP,
+                        SUM(CASE WHEN (GTR1SECO = 2) THEN GTR1IUCA ELSE -GTR1IUCA END) as TRAIMPVP,
                         '0' as TRAIIVVP,
                         '0' as TRAIVAVP,
                         S.GPD0CD as MOVT62CD,
@@ -482,7 +481,7 @@ class SaldiManager {
                         '','','','','','','','','','',
                         '','','','','','','','','','',
                         ''
-                    FROM FINANCE.GSL0PT S
+                    FROM FINANCE.GTR1PT S    -- was: FINANCE.GSL0PT S
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
                     LEFT JOIN THIP.CLI_VEN_V01 CLI on CLI.ID_AZIENDA = S.T01CD and CLI.ID_CLIENTE = (CASE WHEN CLICD !='' THEN CLICD ELSE GPS4CD END)
@@ -497,15 +496,16 @@ class SaldiManager {
                     WHERE S.T01CD = '$ID_AZIENDA'
                         and S.GT01CD = '$DATASET'
                         and S.GT02CD = '$SUBSET'
-                        and S.GSL0TPSL = 1
-                        and S.GS02CD = '*****'
+                        --and S.GSL0TPSL = 1
+                        --and S.GS02CD = '*****'
                         and S.GPV0CD not like 'ZZ%'
                         and S.GPC0CD = '$CENTRO_COSTO'
-                        and S.GSL0DUCA <> S.GSL0AUCA
+                        --and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                    GROUP BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD
-                    HAVING SUM(S.GSL0AUCA-S.GSL0DUCA)<>0
+                    GROUP BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD,S.GTR1DTRE,S.GTR1RFDC
+                    --HAVING SUM(S.GSL0AUCA-S.GSL0DUCA)<>0 
+					HAVING SUM(S.GTR1IUCA) <> 0
                 ";
 
        $panthera->execute_update($query1);
@@ -617,7 +617,7 @@ class SaldiManager {
                         GIPNDTEL,       -- DT Elaborazione
                         GIPNCHC1,       -- Check Elaborato
                         GIPNCHC2)       -- Check da Eliminare
-                    SELECT
+                        SELECT
                         '$DATASET' as DATASET,
                         '1' as STATO,
                         '$utente' as UTENTE_CRZ,
@@ -675,8 +675,10 @@ class SaldiManager {
                         '' as SEGM4_PQ,
                         '' as SEGM5_PQ,
                         'Giroconto Ricavi' as GIPN_DESCRIZIONE,     -- teoricamente ricavabile da ????
-                        SUM(GSL0AUCA-GSL0DUCA) as IMPORTO_VAL_TRANSAZ,
-                        SUM(GSL0AUCA-GSL0DUCA) as IMPORTO_VAL_AZ,
+                        --SUM(GSL0AUCA-GSL0DUCA) as IMPORTO_VAL_TRANSAZ,
+                        --SUM(GSL0AUCA-GSL0DUCA) as IMPORTO_VAL_AZ,
+                        SUM(CASE WHEN (GTR1SECO = 2) THEN GTR1IUCA ELSE -GTR1IUCA END) as IMPORTO_VAL_TRANSAZ,
+                        SUM(CASE WHEN (GTR1SECO = 2) THEN GTR1IUCA ELSE -GTR1IUCA END) as IMPORTO_VAL_AZ,
                         0 as IMPORTO_VAL_GRP,
                         0 as QTY,
                         '1' as SEGNO,   -- Impostare uguale a segno di BETRAPT
@@ -711,7 +713,7 @@ class SaldiManager {
                         0 as UNITARIO_SERV4,
                         0 as UNITARIO_SERV5,
                         $numReg as NUM_REG,
-                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD)) * 2 - 1 as NUM_RIGA, -- come quello di BETRAPT !!!
+                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD,S.GTR1DTRE,S.GTR1RFDC)) * 2 - 1 as NUM_RIGA, -- come quello di BETRAPT !!!
                         --0 as NUM_RIGA,
                         '' as CHIAVE_ORIGINE,
                         '' as SEPARATORE,
@@ -723,7 +725,7 @@ class SaldiManager {
                         '1753-01-01' as DATA_ELAB,
                         '' as CHECK_ELABORATO,
                         '' as CHECK_DA_ELIMINARE
-                    FROM FINANCE.GSL0PT S
+                    FROM FINANCE.GTR1PT S    -- was: FINANCE.GSL0PT S
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
                     LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
@@ -732,14 +734,15 @@ class SaldiManager {
                     WHERE S.T01CD = '$ID_AZIENDA'
                         and S.GT01CD = '$DATASET'
                         and S.GT02CD = '$SUBSET'
-                        and S.GSL0TPSL = 1
-                        and S.GS02CD = '*****'
+                        --and S.GSL0TPSL = 1
+                        --and S.GS02CD = '*****'
                         and S.GPC0CD = '$CENTRO_COSTO'
-                        and S.GSL0DUCA <> S.GSL0AUCA
+                        --and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                    GROUP BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD
-                    HAVING SUM(S.GSL0AUCA-S.GSL0DUCA)<>0
+                    GROUP BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD,S.GTR1DTRE,S.GTR1RFDC
+                    --HAVING SUM(S.GSL0AUCA-S.GSL0DUCA)<>0
+					HAVING SUM(S.GTR1IUCA) <> 0
                 UNION
                     SELECT
                         '$DATASET' as DATASET,
@@ -799,8 +802,10 @@ class SaldiManager {
                         '' as SEGM4_PQ,
                         '' as SEGM5_PQ,
                         'Giroconto Ricavi' as GIPN_DESCRIZIONE,     -- teoricamente ricavabile da ????
-                        SUM(GSL0AUCA-GSL0DUCA) as IMPORTO_VAL_TRANSAZ,
-                        SUM(GSL0AUCA-GSL0DUCA) as IMPORTO_VAL_AZ,
+                        --SUM(GSL0AUCA-GSL0DUCA) as IMPORTO_VAL_TRANSAZ,
+                        --SUM(GSL0AUCA-GSL0DUCA) as IMPORTO_VAL_AZ,
+                        SUM(CASE WHEN (GTR1SECO = 2) THEN GTR1IUCA ELSE -GTR1IUCA END) as IMPORTO_VAL_TRANSAZ,
+                        SUM(CASE WHEN (GTR1SECO = 2) THEN GTR1IUCA ELSE -GTR1IUCA END) as IMPORTO_VAL_AZ,
                         0 as IMPORTO_VAL_GRP,
                         0 as QTY,
                         '2' as SEGNO,   -- Impostare uguale a segno di BETRAPT
@@ -835,7 +840,7 @@ class SaldiManager {
                         0 as UNITARIO_SERV4,
                         0 as UNITARIO_SERV5,
                         $numReg as NUM_REG,
-                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD)) * 2 as NUM_RIGA, -- come quello di BETRAPT !!!
+                        (ROW_NUMBER() OVER(ORDER BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD,S.GTR1DTRE,S.GTR1RFDC)) * 2 as NUM_RIGA, -- come quello di BETRAPT !!!
                         --0 as NUM_RIGA,
                         '' as CHIAVE_ORIGINE,
                         '' as SEPARATORE,
@@ -847,7 +852,7 @@ class SaldiManager {
                         '1753-01-01' as DATA_ELAB,
                         '' as CHECK_ELABORATO,
                         '' as CHECK_DA_ELIMINARE
-                    FROM FINANCE.GSL0PT S
+                    FROM FINANCE.GTR1PT S    -- was: FINANCE.GSL0PT S
                     JOIN THIPPERS.YCOMMESSE C on C.ID_AZIENDA = S.T01CD and C.ID_COMMESSA = S.GPD0CD
                     JOIN THIP.COMMESSE CD on CD.ID_AZIENDA = S.T01CD and CD.ID_COMMESSA = S.GPD0CD
                     LEFT JOIN THIP.ARTICOLI AR on AR.ID_AZIENDA = S.T01CD and AR.ID_ARTICOLO = S.GPS2CD
@@ -856,14 +861,15 @@ class SaldiManager {
                     WHERE S.T01CD = '$ID_AZIENDA'
                         and S.GT01CD = '$DATASET'
                         and S.GT02CD = '$SUBSET'
-                        and S.GSL0TPSL = 1
-                        and S.GS02CD = '*****'
+                        --and S.GSL0TPSL = 1
+                        --and S.GS02CD = '*****'
                         and S.GPC0CD = '$CENTRO_COSTO'
-                        and S.GSL0DUCA <> S.GSL0AUCA
+                        --and S.GSL0DUCA <> S.GSL0AUCA
                         and S.GPD0CD = '$codCommessa'
                         and S.GPV0CD in ($conti_transitori_imploded)
-                    GROUP BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD
-                    HAVING SUM(S.GSL0AUCA-S.GSL0DUCA)<>0
+                    GROUP BY S.T01CD,S.GPV0CD,S.GPC0CD,S.GPD0CD,S.GPS2CD,S.GPS3CD,S.GTR1DTRE,S.GTR1RFDC
+                    --HAVING SUM(S.GSL0AUCA-S.GSL0DUCA)<>0
+					HAVING SUM(S.GTR1IUCA) <> 0
                 ";
 
 /*
@@ -881,7 +887,7 @@ PERO' le due righe di contropartita vengono generate automaticamente dall'imm.ma
 
             $panthera->execute_update($query2);
 
-            // non ho capito se devo o no aggiornare il progressivo su GIPNNPT:
+            // aggiorno il progressivo su GIPNNPT:
             $query = "SELECT MAX(GIPNNATR) from FINANCE.GIPNPT";
             $last = $panthera->select_single_value($query);
             $query = "UPDATE FINANCE.GIPNNPT set GIPNLAST='$last'";
