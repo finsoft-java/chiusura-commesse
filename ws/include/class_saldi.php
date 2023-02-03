@@ -395,7 +395,9 @@ class SaldiManager {
                         --RTRIM(MAX(PARTITE.MAPAAPAR)) as ANNO_PARTITA,
                         --RTRIM(MAX(PARTITE.MAPNRPAR)) as NR_PARTITA,
                         ISNULL(YEAR(S.GTR1DTRE),2000) as ANNO_PARTITA,
-                        ISNULL(RTRIM(S.GTR1RFDC),CONCAT('GCR','$codCommessa')) as NR_PARTITA,
+                        CASE WHEN(S.GTR1RFDC IS NULL OR RTRIM(S.GTR1RFDC) = '')
+                            THEN CONCAT('GCR','$codCommessa')
+                            ELSE RTRIM(S.GTR1RFDC) END as NR_PARTITA,
                         '0'as TRANPIVA,
                         '1' as TRATPVAL,
                         '' as MOD_PAG,
