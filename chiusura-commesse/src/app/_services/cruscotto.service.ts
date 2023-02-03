@@ -58,14 +58,14 @@ export class CruscottoService implements HttpCrudService<VistaCruscotto> {
     x.CONTO_TRANSITORIO = x.CONTO_TRANSITORIO || '';
     x.CONTO_RICAVI = x.CONTO_RICAVI || '';
 
-    if (x.SALDO_CONTO_TRANSITORIO === 0.0) {
+    if (this.circaZero(x.SALDO_CONTO_TRANSITORIO)) {
       // POSSO FARE AVANZAMENTO WORKFLOW
       x.AZIONI = 'wf';
       if (x.CONTO_RICAVI === '' || x.CONTO_RICAVI.includes(';')) {
         x.WARNING = 'verifica.conti'; // c'è qualche problema (conti non ben determinati), solo warning
-      } else if (x.TOT_FATTURATO !== (x.SALDO_CONTO_RICAVI + x.SALDO_CONTO_TRANSITORIO)) {
+      } else if (!this.circaUguali(x.TOT_FATTURATO, x.SALDO_CONTO_RICAVI + x.SALDO_CONTO_TRANSITORIO)) {
         x.WARNING = 'diff.fatturato'; // c'è qualche problema (squadratura), solo warning
-      } else if (x.SALDO_CONTO_TRANSITORIO === 0.0) {
+      } else if (this.circaZero(x.SALDO_CONTO_TRANSITORIO)) {
         x.WARNING = 'none'; // non serve giroconto, si può chiudere
       }
     } else {
@@ -74,9 +74,9 @@ export class CruscottoService implements HttpCrudService<VistaCruscotto> {
       if (x.CONTO_TRANSITORIO.includes(';') || x.CONTO_RICAVI === '' || x.CONTO_RICAVI.includes(';')) {
         x.AZIONI = 'none';
         x.WARNING = 'verifica.conti'; // c'è qualche problema (conti non ben determinati), l'utente deve correggere in Panthera
-      } else if (x.TOT_FATTURATO !== (x.SALDO_CONTO_RICAVI + x.SALDO_CONTO_TRANSITORIO)) {
+      } else if (!this.circaUguali(x.TOT_FATTURATO, x.SALDO_CONTO_RICAVI + x.SALDO_CONTO_TRANSITORIO)) {
         x.WARNING = 'diff.fatturato'; // c'è qualche problema (squadratura), solo warning
-      } else if (x.SALDO_CONTO_RICAVI > 0.0) {
+      } else if (x.SALDO_CONTO_RICAVI > 0.001) {
         x.WARNING = 'giroconto.parziale'; // serve giroconto parziale (warning), poi diventa di tipo 1
       } else {
         x.WARNING = 'none'; // serve giroconto, poi diventa di tipo 1
@@ -84,5 +84,15 @@ export class CruscottoService implements HttpCrudService<VistaCruscotto> {
     }
 
     return x;
+  }
+
+  PRECISIONE = 0.001;
+
+  circaZero(x: number): boolean {
+    return Math.abs(x) < this.PRECISIONE;
+  }
+
+  circaUguali(x: number, y: number): boolean {
+    return this.circaZero(x - y);
   }
 }
